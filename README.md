@@ -16,11 +16,9 @@ L'app funziona anche in modalità demo, senza creare un account.
 
 ## Il futuro: il braccialetto Blistra
 
-In futuro vorremmo creare un **braccialetto** da far indossare alla persona assistita, collegato all'app:
+In futuro vorremmo creare un **braccialetto** per aiutare gli anziani a **ricordarsi di prendere le medicine**.
 
-- quando è ora di prendere una medicina, il braccialetto **vibra al polso**, così il promemoria arriva anche a chi non usa il telefono o non sente la sveglia;
-- essendo sempre addosso, il promemoria non si perde come può succedere con un telefono lasciato in un'altra stanza;
-- la conferma della dose arriverebbe in automatico alla cerchia di famiglia.
+Il braccialetto si indossa al polso ed è collegato all'app: quando è ora di prendere una medicina, **vibra**. Così l'anziano riceve il promemoria direttamente su di sé, anche se non usa lo smartphone, non sente la sveglia o ha lasciato il telefono in un'altra stanza.
 
 ## Tecnologie
 
