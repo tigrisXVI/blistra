@@ -1,0 +1,11 @@
+{
+  "name": "Blistra",
+  "short_name": "Blistra",
+  "description": "La cerchia di famiglia per le terapie di chi ami.",
+  "start_url": "./#today",
+  "display": "standalone",
+  "background_color": "#EEF2EF",
+  "theme_color": "#0B4D39",
+  "lang": "it",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
