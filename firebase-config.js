@@ -1,14 +1,11 @@
-// Incolla qui la configurazione del tuo progetto Firebase (vedi GUIDA.md, passo 4).
-// Finché resta null, Blistra funziona solo in modalità demo.
-//
-// Esempio di come deve diventare:
-// export const firebaseConfig = {
-//   apiKey: "AIza...",
-//   authDomain: "blistra-xxxx.firebaseapp.com",
-//   projectId: "blistra-xxxx",
-//   storageBucket: "blistra-xxxx.appspot.com",
-//   messagingSenderId: "1234567890",
-//   appId: "1:1234567890:web:abcdef"
-// };
+// Configurazione del progetto Firebase "blistra".
+// Questi valori sono pubblici per natura: la sicurezza dei dati e' garantita dalle regole di Firestore.
 
-export const firebaseConfig = null;
+export const firebaseConfig = {
+  apiKey: "AIzaSyD0EfM1Mgn3MC7_N0iqWaBkS0Mc8F3I4Vk",
+  authDomain: "blistra-64e03.firebaseapp.com",
+  projectId: "blistra-64e03",
+  storageBucket: "blistra-64e03.firebasestorage.app",
+  messagingSenderId: "335211743540",
+  appId: "1:335211743540:web:14aa397b0ae679d0dafd61"
+};
