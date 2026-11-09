@@ -1,0 +1,142 @@
+rules_version = '2';
+
+// Blistra 3 — database security rules.
+//
+// These rules run on Google's servers for every read and write. They are the
+// real protection of the data: whatever someone does in their browser, a
+// request that breaks a rule is refused.
+//
+// Principles
+//  - Nothing is readable without signing in, except the public page content.
+//  - A circle's data (people, medicines, doses, reminders) is readable and
+//    writable only by the members of that circle. Not even the administrator
+//    can read it.
+//  - Every document has a size limit and only the expected fields.
+//  - Invite codes can be checked one at a time but never listed.
+//  - The administrator is whoever has an admins/{uid} document. Those
+//    documents can only be created from the Firebase console.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers ------------------------------------------------------------------------
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function fam(fid) { return get(/databases/$(database)/documents/families/$(fid)).data; }
+    function isMember(fid) { return signedIn() && request.auth.uid in fam(fid).memberIds; }
+    function str(v, max) { return v is string && v.size() <= max; }
+    function optStr(m, k, max) { return !(k in m) || str(m[k], max); }
+    function incoming() { return request.resource.data; }
+    function changed() { return incoming().diff(resource.data).affectedKeys(); }
+
+    // ---- administrators -------------------------------------------------------------------
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, write: if false;
+    }
+
+    // ---- public page content (edited in Studio) ---------------------------------------------
+    match /site/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() && docId == "public"
+        && incoming().keys().hasOnly(["v", "look", "sections", "banner", "texts", "updatedBy", "updatedAt"])
+        && incoming().look is map && incoming().texts is map
+        && str(incoming().updatedBy, 40);
+    }
+    match /media/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && incoming().keys().hasOnly(["src", "alt", "caption", "w", "h", "order", "inGallery", "createdAt"])
+        && str(incoming().src, 600000)
+        && (incoming().src.matches("data:image/webp;base64,.*") || incoming().src.matches("data:image/jpeg;base64,.*"))
+        && str(incoming().alt, 160) && str(incoming().caption, 200)
+        && incoming().order is number && incoming().inGallery is bool;
+      allow delete: if isAdmin();
+    }
+
+    // ---- profiles (the register of sign-ups) -------------------------------------------------
+    match /users/{uid} {
+      function validUser(d) {
+        return d.keys().hasOnly(["name", "email", "familyIds", "createdAt", "lastSeen", "consent"])
+          && str(d.name, 40) && str(d.email, 120)
+          && d.familyIds is list && d.familyIds.size() <= 20
+          && optStr(d, "lastSeen", 10);
+      }
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      allow create: if signedIn() && request.auth.uid == uid && validUser(incoming());
+      allow update: if signedIn() && request.auth.uid == uid && validUser(incoming())
+        && !("createdAt" in changed() && "createdAt" in resource.data);
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    // ---- invite codes --------------------------------------------------------------------------
+    match /invites/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && code.matches("[A-Z0-9]{6,8}")
+        && incoming().keys().hasOnly(["familyId", "createdBy"])
+        && incoming().createdBy == request.auth.uid
+        && request.auth.uid in getAfter(/databases/$(database)/documents/families/$(incoming().familyId)).data.memberIds;
+      allow delete: if signedIn() && (resource.data.createdBy == request.auth.uid || isMember(resource.data.familyId));
+      allow update: if false;
+    }
+
+    // ---- family circles ----------------------------------------------------------------------
+    match /families/{fid} {
+      function validFamily(d) {
+        return d.keys().hasOnly(["name", "inviteCode", "memberIds", "members", "patients", "createdBy", "createdAt", "joinCode"])
+          && str(d.name, 40) && d.memberIds is list && d.memberIds.size() >= 1 && d.memberIds.size() <= 30
+          && d.members is map && d.members.size() <= 30
+          && d.patients is map && d.patients.size() <= 20
+          && optStr(d, "inviteCode", 8) && optStr(d, "joinCode", 8);
+      }
+      allow read: if signedIn() && request.auth.uid in resource.data.memberIds;
+
+      allow create: if signedIn() && validFamily(incoming())
+        && incoming().memberIds == [request.auth.uid]
+        && incoming().createdBy == request.auth.uid;
+
+      // Members can change the circle, but not who created it.
+      allow update: if signedIn() && request.auth.uid in resource.data.memberIds
+        && validFamily(incoming())
+        && !changed().hasAny(["createdBy", "createdAt"]);
+
+      // Someone who is not yet a member can only add themselves, and only with a
+      // real invite code for this very circle.
+      allow update: if signedIn() && !(request.auth.uid in resource.data.memberIds)
+        && validFamily(incoming())
+        && changed().hasOnly(["memberIds", "members", "joinCode"])
+        && incoming().memberIds.toSet() == resource.data.memberIds.toSet().union([request.auth.uid].toSet())
+        && incoming().members.diff(resource.data.members).affectedKeys().hasOnly([request.auth.uid])
+        && get(/databases/$(database)/documents/invites/$(incoming().joinCode)).data.familyId == fid;
+
+      // The last member can delete the circle (leaving it, or deleting the account).
+      allow delete: if signedIn() && resource.data.memberIds == [request.auth.uid];
+
+      match /meds/{medId} {
+        allow read, delete: if isMember(fid);
+        allow create, update: if isMember(fid)
+          && str(incoming().name, 60) && str(incoming().patientId, 40)
+          && incoming().times is list && incoming().times.size() <= 12
+          && incoming().days is list && incoming().days.size() <= 7
+          && optStr(incoming(), "photo", 280000) && optStr(incoming(), "dose", 40)
+          && optStr(incoming(), "note", 100) && optStr(incoming(), "look", 120);
+      }
+      match /reminders/{remId} {
+        allow read, delete: if isMember(fid);
+        allow create, update: if isMember(fid) && str(incoming().title, 80) && optStr(incoming(), "note", 200);
+      }
+      match /logs/{day} {
+        allow read, delete: if isMember(fid);
+        allow create, update: if isMember(fid) && day.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")
+          && incoming().keys().hasOnly(["entries"]) && incoming().entries is map && incoming().entries.size() <= 200;
+      }
+    }
+
+    // Anything not listed above is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
