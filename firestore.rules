@@ -127,6 +127,15 @@ service cloud.firestore {
         allow read, delete: if isMember(fid);
         allow create, update: if isMember(fid) && str(incoming().title, 80) && optStr(incoming(), "note", 200);
       }
+      // A Scatoletta Blistra signs in with its own account, which must be a member of the circle.
+      match /devices/{devId} {
+        allow read, delete: if isMember(fid);
+        allow create, update: if isMember(fid)
+          && incoming().keys().hasOnly(["name", "patientId", "morning", "evening", "status"])
+          && str(incoming().name, 40) && str(incoming().patientId, 40)
+          && incoming().morning.matches("[0-2][0-9]:[0-5][0-9]") && incoming().evening.matches("[0-2][0-9]:[0-5][0-9]")
+          && (!("status" in incoming()) || (incoming().status is map && incoming().status.size() <= 8));
+      }
       match /logs/{day} {
         allow read, delete: if isMember(fid);
         allow create, update: if isMember(fid) && day.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")

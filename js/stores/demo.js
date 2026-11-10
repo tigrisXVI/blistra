@@ -57,10 +57,12 @@ export function demoStore() {
   let D;
   try { D = JSON.parse(localStorage.getItem(DEMO_KEY)); } catch (e) { D = null; }
   if (!D || !D.family) D = demoSeed();
+  if (!D.devices) D.devices = [{ id: "box_demo", name: prefs.lang === "it" ? "Scatoletta di Maria" : "Maria's box", patientId: "p_maria", morning: "08:00", evening: "20:00",
+    status: { lastSeen: Date.now(), state: "idle", sector: 0, lastEvent: "dose presa", fw: "0.1" } }];
   const persist = () => { try { localStorage.setItem(DEMO_KEY, JSON.stringify(D)); } catch (e) { } };
   const sync = () => {
     A.user = D.user; A.family = D.family; A.familyIds = D.family ? [D.family.id] : []; A.familyNames = D.family ? { [D.family.id]: D.family.name } : {};
-    A.meds = D.meds; A.reminders = D.reminders; A.logs = D.logs; A.loading = false; persist(); emit();
+    A.meds = D.meds; A.reminders = D.reminders; A.devices = D.devices; A.logs = D.logs; A.loading = false; persist(); emit();
   };
   return {
     kind: "demo",
@@ -81,6 +83,8 @@ export function demoStore() {
     async untake(date, key, med) { if (D.logs[date]) delete D.logs[date][key]; const m = D.meds.find(x => x.id === med.id); if (m && m.stock && typeof m.stock.count === "number") m.stock.count += (m.units || 1); sync(); },
     async addStock(medId, n) { const m = D.meds.find(x => x.id === medId); if (m) { m.stock = m.stock || { threshold: 7 }; m.stock.count = (m.stock.count || 0) + n; } sync(); },
     async saveReminder(r) { const i = D.reminders.findIndex(x => x.id === r.id); if (i >= 0) D.reminders[i] = r; else D.reminders.push(r); sync(); },
-    async deleteReminder(id) { D.reminders = D.reminders.filter(r => r.id !== id); sync(); }
+    async deleteReminder(id) { D.reminders = D.reminders.filter(r => r.id !== id); sync(); },
+    async saveDevice(d) { const i = D.devices.findIndex(x => x.id === d.id); if (i >= 0) D.devices[i] = { ...D.devices[i], ...d }; else D.devices.push(d); sync(); },
+    async deleteDevice(id) { D.devices = D.devices.filter(d => d.id !== id); sync(); }
   };
 }

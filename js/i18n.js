@@ -156,6 +156,14 @@ export const T = {
 const V3 = {
   it: {
     tabs: { today: "Oggi", circle: "Cerchia", meds: "Farmaci", reminders: "Promemoria", account: "Account" },
+    box: { title: "Scatoletta", lead: "La scatoletta portapillole motorizzata: all'ora giusta apre solo lo scomparto della dose e segna qui quando viene svuotato.",
+      add: "Aggiungi una scatoletta", none: "Nessuna scatoletta collegata a questa cerchia.", name: "Nome della scatoletta", name_ph: "es. Scatoletta della nonna",
+      for_who: "Di chi sono le pillole", morning: "Apertura del mattino", evening: "Apertura della sera", split: "I farmaci con orario prima delle 14 vanno negli scomparti del mattino, gli altri in quelli della sera.",
+      summary: "Per {p}: mattina {m}, sera {e}", online: "Collegata", offline: "Non collegata da {t}", never: "Mai collegata", setup: "Imposta",
+      ids: "Dati per il programma", ids_desc: "Copiali nel file config.h prima di caricare il programma sulla scheda.", id_circle: "ID della cerchia", id_box: "ID della scatoletta",
+      by: "dalla scatoletta", confirm_del: "Tocca di nuovo per scollegare la scatoletta",
+      state: { idle: "A riposo", waiting: "Dose pronta: aspetta che venga presa", refill: "In ricarica", error: "Bloccata: controlla il carosello" },
+      ago_min: "{n} min", ago_h: "{n} ore", ago_d: "{n} giorni" },
     f_add_time: "+ Aggiungi un orario", nav_project: "Il progetto", open_app: "Apri Blistra", signin_cta: "Accedi", loading: "Caricamento",
     pw_hint: "Almeno 8 caratteri.", pw_short: "La password deve avere almeno 8 caratteri.",
     consent_health: "Acconsento a usare in Blistra i dati sulle terapie (farmaci, orari, dosi prese) delle persone che assisto, come spiegato nell'informativa privacy.",
@@ -178,6 +186,14 @@ const V3 = {
   },
   en: {
     tabs: { today: "Today", circle: "Circle", meds: "Medicines", reminders: "Reminders", account: "Account" },
+    box: { title: "Pill box", lead: "The motorised pill box: at the right time it opens only that dose's compartment, and records here when it is emptied.",
+      add: "Add a pill box", none: "No pill box linked to this circle.", name: "Name of the box", name_ph: "e.g. Grandma's box",
+      for_who: "Whose pills are inside", morning: "Morning opening", evening: "Evening opening", split: "Medicines timed before 2 pm go in the morning compartments, the others in the evening ones.",
+      summary: "For {p}: morning {m}, evening {e}", online: "Connected", offline: "Not connected for {t}", never: "Never connected", setup: "Set up",
+      ids: "Details for the program", ids_desc: "Copy them into config.h before uploading the program to the board.", id_circle: "Circle ID", id_box: "Box ID",
+      by: "from the pill box", confirm_del: "Tap again to unlink the box",
+      state: { idle: "Resting", waiting: "Dose ready: waiting for it to be taken", refill: "Being refilled", error: "Stuck: check the carousel" },
+      ago_min: "{n} min", ago_h: "{n} h", ago_d: "{n} days" },
     f_add_time: "+ Add a time", nav_project: "The project", open_app: "Open Blistra", signin_cta: "Sign in", loading: "Loading",
     pw_hint: "At least 8 characters.", pw_short: "The password needs at least 8 characters.",
     consent_health: "I agree that Blistra may use therapy data (medicines, times, doses taken) of the people I care for, as explained in the privacy notice.",
@@ -200,7 +216,7 @@ const V3 = {
   }
 };
 for (const lang of ["it", "en"]) {
-  const { err, tabs, ...rest } = V3[lang];
+  const { err, tabs, ...rest } = V3[lang];   // "box" (the pill box strings) is copied with the rest
   Object.assign(T[lang], rest);
   T[lang].tabs = tabs;
   Object.assign(T[lang].err, err);

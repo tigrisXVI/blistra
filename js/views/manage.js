@@ -27,8 +27,8 @@ export function viewCircle(storeKind) {
   [ymd(now), ymd(addDays(now, -1))].forEach(dk => Object.entries(A.logs[dk] || {}).forEach(([k, e]) => { const m = A.meds.find(x => k.startsWith(x.id + "_")); if (m) feed.push({ e, m, dk }); }));
   feed.sort((a, b) => (b.e.ts || 0) - (a.e.ts || 0));
   const feedHtml = feed.slice(0, 8).map(x => {
-    const p = patientById(x.m.patientId) || { name: "?" }, self = x.e.by === "device";
-    return "<li>" + avatar(x.e.byName, self ? p.color : "#4A5A70") + "<div><b>" + esc(x.e.byName) + "</b>" + (self ? ' <span class="muted">(' + esc(t.by_device) + ")</span>" : "") +
+    const p = patientById(x.m.patientId) || { name: "?" }, self = x.e.by === "device", box = x.e.by === "box";
+    return "<li>" + avatar(x.e.byName, self ? p.color : box ? "#13294B" : "#4A5A70") + "<div><b>" + esc(x.e.byName) + "</b>" + (self ? ' <span class="muted">(' + esc(t.by_device) + ")</span>" : box ? ' <span class="muted">(' + esc(t.box.by) + ")</span>" : "") +
       '<span class="muted">' + esc(x.m.name) + (self ? "" : ", " + esc(p.name)) + '</span></div><span class="muted num">' + (x.dk === ymd(now) ? "" : (prefs.lang === "it" ? "ieri " : "yday ")) + esc(x.e.at) + "</span></li>";
   }).join("");
   const members = Object.entries(f.members || {}).map(([id, m]) => "<li>" + avatar(m.name, "#13294B") + "<div><b>" + esc(m.name) + "</b>" + (id === A.user.uid ? ' <span class="muted">(' + (prefs.lang === "it" ? "tu" : "you") + ")</span>" : "") + "</div><span></span></li>").join("");
@@ -42,7 +42,30 @@ export function viewCircle(storeKind) {
     '<section class="panel stack"><h2 class="h-card">' + esc(t.members) + '</h2><ul class="feed">' + members + "</ul>" +
     "<h3>" + esc(t.invite) + '</h3><p class="muted">' + esc(t.invite_desc) + '</p><p class="code num">' + esc(f.inviteCode || "—") + "</p>" +
     '<button class="btn" data-copy="' + esc(fmt(t.invite_text, { c: f.inviteCode, u: shareUrl })) + '">' + esc(t.copy) + "</button></section></div>" +
+    boxPanel() +
     (storeKind === "cloud" || A.familyIds.length > 1 ? circleSwitch(storeKind) : "") + "</div>";
+}
+
+/** How long ago, in words ("5 min", "3 ore"). */
+function ago(ms) {
+  const b = L().box, min = Math.max(1, Math.round((Date.now() - ms) / 60000));
+  return min < 60 ? fmt(b.ago_min, { n: min }) : min < 2880 ? fmt(b.ago_h, { n: Math.round(min / 60) }) : fmt(b.ago_d, { n: Math.round(min / 1440) });
+}
+
+/** The pill boxes linked to this circle, with their live status. */
+function boxPanel() {
+  const t = L(), b = t.box;
+  const rows = A.devices.map(d => {
+    const p = patientById(d.patientId), st = d.status || {}, seen = Number(st.lastSeen) || 0;
+    const online = seen && Date.now() - seen < 4 * 60000;
+    return '<li class="box-row"><span class="f-ico">' + icon("cube", 26) + "</span><div><div class=\"row-wrap\"><h3>" + esc(d.name) + "</h3>" +
+      '<span class="tag ' + (online ? "ok" : seen ? "due" : "") + '">' + esc(online ? b.online : seen ? fmt(b.offline, { t: ago(seen) }) : b.never) + "</span></div>" +
+      '<p class="meta">' + esc(fmt(b.summary, { p: p ? p.name : "?", m: d.morning, e: d.evening })) + "</p>" +
+      (online && b.state[st.state] ? '<p class="meta">' + esc(b.state[st.state]) + "</p>" : "") +
+      '</div><button class="btn sm" data-edit-box="' + esc(d.id) + '">' + esc(b.setup) + "</button></li>";
+  }).join("");
+  return '<section class="panel stack"><div class="row-between"><h2 class="h-card">' + esc(b.title) + '</h2><button class="btn sm" data-add-box-device>' + icon("plus", 16) + esc(b.add) + "</button></div>" +
+    '<p class="muted">' + esc(b.lead) + "</p>" + (rows ? '<ul class="boxes">' + rows + "</ul>" : '<p class="muted">' + esc(b.none) + "</p>") + "</section>";
 }
 
 function circleSwitch(storeKind) {

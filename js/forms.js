@@ -114,6 +114,24 @@ export function openSheet(m) {
     '<p class="hint">' + esc(t.sheet_disclaimer) + '</p><div class="sheet-actions"><button class="btn ghost sm" data-edit="' + esc(m.id) + '">' + icon("edit", 16) + esc(t.edit) + '</button><button class="btn" data-close>' + esc(t.close) + "</button></div></div>");
 }
 
+// ---- pill box (Scatoletta Blistra) ---------------------------------------------------
+
+export function openBoxForm(dev, familyId) {
+  const t = L(), b = t.box, isNew = !dev;
+  const d = dev || { id: "box_" + uid(10), name: "", patientId: currentPatientId() || "", morning: "08:00", evening: "20:00" };
+  const ps = patients().map(p => '<option value="' + esc(p.id) + '"' + (p.id === d.patientId ? " selected" : "") + ">" + esc(p.name) + "</option>").join("");
+  modal('<form class="stack" id="boxform" data-id="' + esc(d.id) + '">' + sheetHead(isNew ? b.add : d.name) +
+    '<label class="f">' + esc(b.name) + '<input type="text" id="b-name" value="' + esc(d.name) + '" placeholder="' + esc(b.name_ph) + '" maxlength="40" required></label>' +
+    '<label class="f">' + esc(b.for_who) + '<select id="b-pat">' + ps + "</select></label>" +
+    '<div class="grid2"><label class="f">' + esc(b.morning) + '<input type="time" id="b-morning" value="' + esc(d.morning) + '" required></label>' +
+    '<label class="f">' + esc(b.evening) + '<input type="time" id="b-evening" value="' + esc(d.evening) + '" required></label></div>' +
+    '<p class="hint">' + esc(b.split) + "</p>" +
+    (isNew ? "" : "<fieldset><legend>" + esc(b.ids) + '</legend><p class="hint">' + esc(b.ids_desc) + "</p>" +
+      '<p class="idline"><span>' + esc(b.id_circle) + '</span><code>' + esc(familyId) + '</code><button type="button" class="btn sm ghost" data-copy="' + esc(familyId) + '">' + esc(t.copy) + "</button></p>" +
+      '<p class="idline"><span>' + esc(b.id_box) + '</span><code>' + esc(d.id) + '</code><button type="button" class="btn sm ghost" data-copy="' + esc(d.id) + '">' + esc(t.copy) + "</button></p></fieldset>") +
+    actions(isNew, 'data-del-box="' + esc(d.id) + '"') + "</form>");
+}
+
 // ---- lock the phone to one person ---------------------------------------------------
 
 export function openLockSetup(pid) {

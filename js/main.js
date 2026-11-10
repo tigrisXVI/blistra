@@ -12,7 +12,7 @@ import { viewPrivacy, viewTerms } from "./views/legal.js";
 import { viewToday } from "./views/today.js";
 import { viewCircle, viewMeds, viewReminders, viewWeek, viewAccount } from "./views/manage.js";
 import * as St from "./views/studio.js";
-import { drafts, openMedForm, drawMedForm, syncMedDraft, openRemForm, drawRemForm, openPatientForm, openSheet, openLockSetup, openPinForm } from "./forms.js";
+import { drafts, openMedForm, drawMedForm, syncMedDraft, openRemForm, drawRemForm, openPatientForm, openSheet, openLockSetup, openPinForm, openBoxForm } from "./forms.js";
 import { unlockAudio, ring, checkAlarms, dismissAlarm, snoozes } from "./alarms.js";
 import { downloadICS } from "./ics.js";
 import { demoStore } from "./stores/demo.js";
@@ -195,6 +195,9 @@ document.addEventListener("click", e => {
   if (ds.shape) { syncMedDraft(); drafts.med.shape = ds.shape; drawMedForm(""); return; }
   if (ds.photoRm !== undefined) { syncMedDraft(); drafts.med.photo = ""; drawMedForm(""); return; }
   if (ds.delMed) { const m = A.meds.find(x => x.id === ds.delMed); if (b.dataset.armed) { act(() => store.deleteMed(ds.delMed)); closeModal(); } else { b.dataset.armed = "1"; b.textContent = fmt(t.confirm_del, { m: m ? m.name : "" }); } return; }
+  if (ds.addBoxDevice !== undefined) { if (!Object.keys(A.family.patients || {}).length) { toast(t.need_patient); return; } openBoxForm(null, A.family.id); return; }
+  if (ds.editBox) { const d = A.devices.find(x => x.id === ds.editBox); if (d) openBoxForm(d, A.family.id); return; }
+  if (ds.delBox) { if (b.dataset.armed) { act(() => store.deleteDevice(ds.delBox)); closeModal(); } else { b.dataset.armed = "1"; b.textContent = t.box.confirm_del; } return; }
   if (ds.addRem !== undefined) { openRemForm(null); return; }
   if (ds.editRem) { openRemForm(A.reminders.find(r => r.id === ds.editRem)); return; }
   if (ds.delRem) { if (b.dataset.armed) { act(() => store.deleteReminder(ds.delRem)); closeModal(); } else { b.dataset.armed = "1"; b.textContent = t.del + "?"; } return; }
@@ -311,6 +314,12 @@ document.addEventListener("submit", e => {
     delete r._new; const x = clone(r); closeModal(); drafts.rem = null; act(() => store.saveReminder(x)); return;
   }
   if (id === "patform") { const n = g("p-name").value.trim(); if (!n) return; const p = { id: e.target.dataset.pid, name: n, color: g("p-color").value }; closeModal(); act(() => store.savePatient(p)); return; }
+  if (id === "boxform") {
+    const n = g("b-name").value.trim(), m = g("b-morning").value, ev = g("b-evening").value;
+    if (!n || !/^\d\d:\d\d$/.test(m) || !/^\d\d:\d\d$/.test(ev)) return;
+    const d = { id: e.target.dataset.id, name: n.slice(0, 40), patientId: g("b-pat").value, morning: m, evening: ev };
+    closeModal(); act(() => store.saveDevice(d)); return;
+  }
   if (id === "lockform") {
     const pin = g("l-pin").value.replace(/\D/g, ""), pid = e.target.dataset.pid;
     (async () => {

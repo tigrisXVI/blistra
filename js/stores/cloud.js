@@ -8,6 +8,7 @@
 //   families/{fid}/meds/{id}        one medicine with its schedule, stock and prescription
 //   families/{fid}/reminders/{id}   appointments and other reminders
 //   families/{fid}/logs/{yyyy-mm-dd} doses taken that day
+//   families/{fid}/devices/{id}     a Scatoletta Blistra: who it is for, its times, its last status
 //   invites/{CODE}                  invite code -> circle id
 //   site/public                     texts and look of the public page (edited in Studio)
 //   media/{id}                      images uploaded from Studio
@@ -35,7 +36,7 @@ export async function cloudStore() {
   function subscribeFamily(id) {
     clearFam();
     currentFid = id;
-    Object.assign(A, { family: null, meds: [], reminders: [], logs: {}, familyLoading: !!id });
+    Object.assign(A, { family: null, meds: [], reminders: [], devices: [], logs: {}, familyLoading: !!id });
     if (!id) { emit(); return; }
     prefs.lastFamily = id; savePrefs();
     famUnsubs.push(onSnapshot(doc(db, "families", id), s => {
@@ -46,6 +47,7 @@ export async function cloudStore() {
     }, onErr));
     famUnsubs.push(onSnapshot(collection(db, "families", id, "meds"), qs => { A.meds = qs.docs.map(d => Object.assign({ id: d.id }, d.data())); emit(); }, onErr));
     famUnsubs.push(onSnapshot(collection(db, "families", id, "reminders"), qs => { A.reminders = qs.docs.map(d => Object.assign({ id: d.id }, d.data())); emit(); }, onErr));
+    famUnsubs.push(onSnapshot(collection(db, "families", id, "devices"), qs => { A.devices = qs.docs.map(d => Object.assign({ id: d.id }, d.data())); emit(); }, onErr));
     const since = ymd(addDays(new Date(), -HISTORY_DAYS));
     famUnsubs.push(onSnapshot(query(collection(db, "families", id, "logs"), where(documentId(), ">=", since)), qs => {
       const out = {}; qs.docs.forEach(d => { out[d.id] = d.data().entries || {}; }); A.logs = out; emit();
@@ -57,7 +59,7 @@ export async function cloudStore() {
     if (userUnsub) { userUnsub(); userUnsub = null; }
     currentFid = undefined;
     if (!u) {
-      Object.assign(A, { user: null, isAdmin: false, needsConsent: false, family: null, familyIds: [], meds: [], reminders: [], logs: {}, loading: false });
+      Object.assign(A, { user: null, isAdmin: false, needsConsent: false, family: null, familyIds: [], meds: [], reminders: [], devices: [], logs: {}, loading: false });
       emit(); return;
     }
     A.user = { uid: u.uid, name: u.displayName || (u.email || "").split("@")[0], email: u.email || "", verified: u.emailVerified };
@@ -91,7 +93,7 @@ export async function cloudStore() {
   async function deleteCircle(f) {
     const fam = await getDoc(doc(db, "families", f));
     if (fam.exists() && fam.data().inviteCode) await deleteDoc(doc(db, "invites", fam.data().inviteCode)).catch(() => {});
-    for (const sub of ["meds", "reminders", "logs"]) {
+    for (const sub of ["meds", "reminders", "logs", "devices"]) {
       const qs = await getDocs(collection(db, "families", f, sub));
       for (let i = 0; i < qs.docs.length; i += 400) {
         const b = writeBatch(db);
@@ -145,7 +147,7 @@ export async function cloudStore() {
         try {
           const fam = await getDoc(doc(db, "families", f));
           const c = { id: f, ...fam.data() };
-          for (const sub of ["meds", "reminders", "logs"]) c[sub] = (await getDocs(collection(db, "families", f, sub))).docs.map(d => ({ id: d.id, ...d.data() }));
+          for (const sub of ["meds", "reminders", "logs", "devices"]) c[sub] = (await getDocs(collection(db, "families", f, sub))).docs.map(d => ({ id: d.id, ...d.data() }));
           out.circles.push(c);
         } catch (e) { /* skip circles we can no longer read */ }
       }
@@ -211,6 +213,9 @@ export async function cloudStore() {
     async addStock(medId, n) { await updateDoc(doc(db, "families", fid(), "meds", medId), { "stock.count": increment(n) }); },
     async saveReminder(r) { await setDoc(doc(db, "families", fid(), "reminders", r.id), strip(r)); },
     async deleteReminder(id) { await deleteDoc(doc(db, "families", fid(), "reminders", id)); },
+    // The box itself writes only its "status"; merge keeps it when the family edits the settings.
+    async saveDevice(d) { await setDoc(doc(db, "families", fid(), "devices", d.id), { name: d.name, patientId: d.patientId, morning: d.morning, evening: d.evening }, { merge: true }); },
+    async deleteDevice(id) { await deleteDoc(doc(db, "families", fid(), "devices", id)); },
 
     // ---- administrator only (the rules refuse these calls to anyone else) -------------
     async listUsers() {
