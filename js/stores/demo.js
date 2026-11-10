@@ -58,7 +58,7 @@ export function demoStore() {
   try { D = JSON.parse(localStorage.getItem(DEMO_KEY)); } catch (e) { D = null; }
   if (!D || !D.family) D = demoSeed();
   if (!D.devices) D.devices = [{ id: "box_demo", name: prefs.lang === "it" ? "Scatoletta di Maria" : "Maria's box", patientId: "p_maria", morning: "08:00", evening: "20:00",
-    status: { lastSeen: Date.now(), state: "idle", sector: 0, lastEvent: "dose presa", fw: "0.1" } }];
+    weights: { m2: 180, m3: 560 }, status: { lastSeen: Date.now(), state: "idle", sector: 0, lastEvent: "dose presa", outcome: "all", loads: { 1: "ok", 2: "ok", 3: "bad" }, fw: "0.2" } }];
   const persist = () => { try { localStorage.setItem(DEMO_KEY, JSON.stringify(D)); } catch (e) { } };
   const sync = () => {
     A.user = D.user; A.family = D.family; A.familyIds = D.family ? [D.family.id] : []; A.familyNames = D.family ? { [D.family.id]: D.family.name } : {};

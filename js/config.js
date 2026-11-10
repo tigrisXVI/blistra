@@ -5,7 +5,7 @@
 // of these values but the security rules in firestore.rules, which Google
 // enforces on its own servers for every single read and write.
 
-export const VERSION = "3.1";
+export const VERSION = "3.2";
 
 /** Public contact shown on the project page. */
 export const CONTACT = "tigrisedicesimo@gmail.com";

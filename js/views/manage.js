@@ -62,7 +62,8 @@ function boxPanel() {
       '<span class="tag ' + (online ? "ok" : seen ? "due" : "") + '">' + esc(online ? b.online : seen ? fmt(b.offline, { t: ago(seen) }) : b.never) + "</span></div>" +
       '<p class="meta">' + esc(fmt(b.summary, { p: p ? p.name : "?", m: d.morning, e: d.evening })) + "</p>" +
       (online && b.state[st.state] ? '<p class="meta">' + esc(b.state[st.state]) + "</p>" : "") +
-      '</div><button class="btn sm" data-edit-box="' + esc(d.id) + '">' + esc(b.setup) + "</button></li>";
+      (b.outcome[st.outcome] ? '<p class="meta">' + esc(b.outcome[st.outcome]) + "</p>" : "") +
+      '</div><div class="box-act"><button class="btn sm" data-refill-box="' + esc(d.id) + '">' + esc(b.refill) + '</button><button class="btn sm ghost" data-edit-box="' + esc(d.id) + '">' + esc(b.setup) + "</button></div></li>";
   }).join("");
   return '<section class="panel stack"><div class="row-between"><h2 class="h-card">' + esc(b.title) + '</h2><button class="btn sm" data-add-box-device>' + icon("plus", 16) + esc(b.add) + "</button></div>" +
     '<p class="muted">' + esc(b.lead) + "</p>" + (rows ? '<ul class="boxes">' + rows + "</ul>" : '<p class="muted">' + esc(b.none) + "</p>") + "</section>";

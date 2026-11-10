@@ -1,7 +1,7 @@
 // Dialogs with forms: medicine, reminder, person cared for, medicine sheet, lock.
 // Each form keeps a draft object while open, so redrawing never loses what was typed.
 
-import { L } from "./state.js";
+import { A, L } from "./state.js";
 import { esc, fmt, uid, ymd, addDays, clone } from "./util.js";
 import { patients, patientById, currentPatientId, COLORS, PCOLORS } from "./domain.js";
 import { modal, medVisual, pillSVG, icon, toast } from "./ui.js";
@@ -126,10 +126,38 @@ export function openBoxForm(dev, familyId) {
     '<div class="grid2"><label class="f">' + esc(b.morning) + '<input type="time" id="b-morning" value="' + esc(d.morning) + '" required></label>' +
     '<label class="f">' + esc(b.evening) + '<input type="time" id="b-evening" value="' + esc(d.evening) + '" required></label></div>' +
     '<p class="hint">' + esc(b.split) + "</p>" +
+    (isNew ? "" : "<fieldset><legend>" + esc(b.cal) + '</legend><p class="hint">' + esc(b.cal_desc) + "</p>" + (boxMeds(d).map(m =>
+      '<label class="f calrow"><span>' + esc(m.name) + '</span><span class="unit"><input type="number" inputmode="numeric" min="1" max="5000" step="1" data-cal="' + esc(m.id) + '" value="' + esc(String((d.weights || {})[m.id] || "")) + '"> mg</span></label>').join("") || '<p class="muted">' + esc(b.cal_none) + "</p>") + "</fieldset>") +
     (isNew ? "" : "<fieldset><legend>" + esc(b.ids) + '</legend><p class="hint">' + esc(b.ids_desc) + "</p>" +
       '<p class="idline"><span>' + esc(b.id_circle) + '</span><code>' + esc(familyId) + '</code><button type="button" class="btn sm ghost" data-copy="' + esc(familyId) + '">' + esc(t.copy) + "</button></p>" +
       '<p class="idline"><span>' + esc(b.id_box) + '</span><code>' + esc(d.id) + '</code><button type="button" class="btn sm ghost" data-copy="' + esc(d.id) + '">' + esc(t.copy) + "</button></p></fieldset>") +
     actions(isNew, 'data-del-box="' + esc(d.id) + '"') + "</form>");
+}
+
+/** The medicines that go into a box: those of the person it belongs to. */
+function boxMeds(d) { return A.meds.filter(m => m.patientId === d.patientId); }
+
+/** What each of the 14 compartments must hold: 1 = Monday morning, 2 = Monday evening … 14 = Sunday evening. */
+export function boxPlan(d) {
+  const meds = boxMeds(d), w = d.weights || {};
+  return Array.from({ length: 14 }, (_, i) => {
+    const day = Math.floor(i / 2), morning = i % 2 === 0, items = [];
+    meds.forEach(m => { if (!(m.days || []).includes(day)) return;
+      const n = (m.times || []).filter(tm => (tm < "14:00") === morning).length * (m.units || 1); if (n) items.push({ m, n }); });
+    const known = items.length && items.every(x => w[x.m.id] > 0);
+    return { n: i + 1, day, morning, items, mg: known ? items.reduce((s, x) => s + x.n * w[x.m.id], 0) : null };
+  });
+}
+
+/** Guided refill: compartment by compartment, with the check the box made by weight. */
+export function openBoxRefill(d) {
+  const t = L(), b = t.box, loads = (d.status && d.status.loads) || {};
+  const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(document.documentElement.lang || "it", { weekday: "long" });
+  const rows = boxPlan(d).map(c => { const st = loads[c.n];
+    return '<li class="comp"><div class="row-wrap"><h3>' + esc(fmt(b.comp, { n: c.n })) + '</h3><span class="muted">' + esc(fmt(c.morning ? b.slot_m : b.slot_e, { d: dayName(c.day) })) + "</span>" +
+      (st === "ok" || st === "bad" ? '<span class="tag ' + (st === "ok" ? "ok" : "late") + '">' + esc(st === "ok" ? b.load_ok : b.load_bad) + "</span>" : "") + "</div>" +
+      (c.items.length ? '<p class="meta">' + c.items.map(x => esc(x.n + "× " + x.m.name)).join(" · ") + (c.mg ? " · " + esc(fmt(b.exp_w, { g: (c.mg / 1000).toFixed(2) })) : "") + "</p>" : '<p class="meta muted">' + esc(b.comp_empty) + "</p>") + "</li>"; }).join("");
+  modal('<div class="stack">' + sheetHead(b.refill) + '<p class="muted">' + esc(b.refill_lead) + '</p><ul class="boxes">' + rows + "</ul></div>");
 }
 
 // ---- lock the phone to one person ---------------------------------------------------

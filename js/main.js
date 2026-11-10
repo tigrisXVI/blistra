@@ -12,7 +12,7 @@ import { viewPrivacy, viewTerms } from "./views/legal.js";
 import { viewToday } from "./views/today.js";
 import { viewCircle, viewMeds, viewReminders, viewWeek, viewAccount } from "./views/manage.js";
 import * as St from "./views/studio.js";
-import { drafts, openMedForm, drawMedForm, syncMedDraft, openRemForm, drawRemForm, openPatientForm, openSheet, openLockSetup, openPinForm, openBoxForm } from "./forms.js";
+import { drafts, openMedForm, drawMedForm, syncMedDraft, openRemForm, drawRemForm, openPatientForm, openSheet, openLockSetup, openPinForm, openBoxForm, openBoxRefill } from "./forms.js";
 import { unlockAudio, ring, checkAlarms, dismissAlarm, snoozes } from "./alarms.js";
 import { downloadICS } from "./ics.js";
 import { demoStore } from "./stores/demo.js";
@@ -196,6 +196,7 @@ document.addEventListener("click", e => {
   if (ds.photoRm !== undefined) { syncMedDraft(); drafts.med.photo = ""; drawMedForm(""); return; }
   if (ds.delMed) { const m = A.meds.find(x => x.id === ds.delMed); if (b.dataset.armed) { act(() => store.deleteMed(ds.delMed)); closeModal(); } else { b.dataset.armed = "1"; b.textContent = fmt(t.confirm_del, { m: m ? m.name : "" }); } return; }
   if (ds.addBoxDevice !== undefined) { if (!Object.keys(A.family.patients || {}).length) { toast(t.need_patient); return; } openBoxForm(null, A.family.id); return; }
+  if (ds.refillBox) { const d = A.devices.find(x => x.id === ds.refillBox); if (d) openBoxRefill(d); return; }
   if (ds.editBox) { const d = A.devices.find(x => x.id === ds.editBox); if (d) openBoxForm(d, A.family.id); return; }
   if (ds.delBox) { if (b.dataset.armed) { act(() => store.deleteDevice(ds.delBox)); closeModal(); } else { b.dataset.armed = "1"; b.textContent = t.box.confirm_del; } return; }
   if (ds.addRem !== undefined) { openRemForm(null); return; }
@@ -317,7 +318,8 @@ document.addEventListener("submit", e => {
   if (id === "boxform") {
     const n = g("b-name").value.trim(), m = g("b-morning").value, ev = g("b-evening").value;
     if (!n || !/^\d\d:\d\d$/.test(m) || !/^\d\d:\d\d$/.test(ev)) return;
-    const d = { id: e.target.dataset.id, name: n.slice(0, 40), patientId: g("b-pat").value, morning: m, evening: ev };
+    const weights = {}; e.target.querySelectorAll("[data-cal]").forEach(i => { const v = Math.round(Number(i.value)); if (v >= 1 && v <= 5000) weights[i.dataset.cal] = v; });
+    const d = { id: e.target.dataset.id, name: n.slice(0, 40), patientId: g("b-pat").value, morning: m, evening: ev, weights };
     closeModal(); act(() => store.saveDevice(d)); return;
   }
   if (id === "lockform") {

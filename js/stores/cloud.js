@@ -8,7 +8,7 @@
 //   families/{fid}/meds/{id}        one medicine with its schedule, stock and prescription
 //   families/{fid}/reminders/{id}   appointments and other reminders
 //   families/{fid}/logs/{yyyy-mm-dd} doses taken that day
-//   families/{fid}/devices/{id}     a Scatoletta Blistra: who it is for, its times, its last status
+//   families/{fid}/devices/{id}     a Scatoletta Blistra: who it is for, its times, pill weights (mg), its last status
 //   invites/{CODE}                  invite code -> circle id
 //   site/public                     texts and look of the public page (edited in Studio)
 //   media/{id}                      images uploaded from Studio
@@ -214,7 +214,7 @@ export async function cloudStore() {
     async saveReminder(r) { await setDoc(doc(db, "families", fid(), "reminders", r.id), strip(r)); },
     async deleteReminder(id) { await deleteDoc(doc(db, "families", fid(), "reminders", id)); },
     // The box itself writes only its "status"; merge keeps it when the family edits the settings.
-    async saveDevice(d) { await setDoc(doc(db, "families", fid(), "devices", d.id), { name: d.name, patientId: d.patientId, morning: d.morning, evening: d.evening }, { merge: true }); },
+    async saveDevice(d) { await setDoc(doc(db, "families", fid(), "devices", d.id), { name: d.name, patientId: d.patientId, morning: d.morning, evening: d.evening, weights: d.weights || {} }, { mergeFields: ["name", "patientId", "morning", "evening", "weights"] }); },
     async deleteDevice(id) { await deleteDoc(doc(db, "families", fid(), "devices", id)); },
 
     // ---- administrator only (the rules refuse these calls to anyone else) -------------
