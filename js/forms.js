@@ -118,13 +118,14 @@ export function openSheet(m) {
 
 export function openBoxForm(dev, familyId) {
   const t = L(), b = t.box, isNew = !dev;
-  const d = dev || { id: "box_" + uid(10), name: "", patientId: currentPatientId() || "", morning: "08:00", evening: "20:00" };
+  const d = dev || { id: "box_" + uid(10), name: "", patientId: currentPatientId() || "", times: ["08:00", "13:00", "17:00", "21:00"] };
+  const tt = boxTimes(d);
   const ps = patients().map(p => '<option value="' + esc(p.id) + '"' + (p.id === d.patientId ? " selected" : "") + ">" + esc(p.name) + "</option>").join("");
   modal('<form class="stack" id="boxform" data-id="' + esc(d.id) + '">' + sheetHead(isNew ? b.add : d.name) +
     '<label class="f">' + esc(b.name) + '<input type="text" id="b-name" value="' + esc(d.name) + '" placeholder="' + esc(b.name_ph) + '" maxlength="40" required></label>' +
     '<label class="f">' + esc(b.for_who) + '<select id="b-pat">' + ps + "</select></label>" +
-    '<div class="grid2"><label class="f">' + esc(b.morning) + '<input type="time" id="b-morning" value="' + esc(d.morning) + '" required></label>' +
-    '<label class="f">' + esc(b.evening) + '<input type="time" id="b-evening" value="' + esc(d.evening) + '" required></label></div>' +
+    "<fieldset><legend>" + esc(b.times) + '</legend><div class="grid2">' + [0, 1, 2, 3].map(i =>
+      '<label class="f">' + esc(fmt(b.dose_n, { n: i + 1 })) + '<input type="time" data-btime="' + i + '" value="' + esc(tt[i] || "") + '"' + (i === 0 ? " required" : "") + "></label>").join("") + "</div></fieldset>" +
     '<p class="hint">' + esc(b.split) + "</p>" +
     (isNew ? "" : "<fieldset><legend>" + esc(b.cal) + '</legend><p class="hint">' + esc(b.cal_desc) + "</p>" + (boxMeds(d).map(m =>
       '<label class="f calrow"><span>' + esc(m.name) + '</span><span class="unit"><input type="number" inputmode="numeric" min="1" max="5000" step="1" data-cal="' + esc(m.id) + '" value="' + esc(String((d.weights || {})[m.id] || "")) + '"> mg</span></label>').join("") || '<p class="muted">' + esc(b.cal_none) + "</p>") + "</fieldset>") +
@@ -137,15 +138,29 @@ export function openBoxForm(dev, familyId) {
 /** The medicines that go into a box: those of the person it belongs to. */
 function boxMeds(d) { return A.meds.filter(m => m.patientId === d.patientId); }
 
-/** What each of the 14 compartments must hold: 1 = Monday morning, 2 = Monday evening … 14 = Sunday evening. */
+/** The box's 4 dose times ("" = not used). Older boxes stored only a morning and an evening time. */
+export function boxTimes(d) {
+  if (Array.isArray(d.times)) return [0, 1, 2, 3].map(i => d.times[i] || "");
+  return [d.morning || "08:00", "", "", d.evening || "20:00"];
+}
+
+/** Which of the box's doses a medicine time belongs to: the one with the nearest time (the box firmware does the same). */
+export function doseOf(tm, times) {
+  const toM = s => +s.slice(0, 2) * 60 + +s.slice(3, 5);
+  let best = -1, dist = 1e9;
+  times.forEach((t, i) => { if (!t) return; const x = Math.abs(toM(t) - toM(tm)); if (x < dist) { dist = x; best = i; } });
+  return best;
+}
+
+/** What each of the 28 compartments must hold: 1-4 = Monday doses 1-4, 5-8 = Tuesday … 25-28 = Sunday. */
 export function boxPlan(d) {
-  const meds = boxMeds(d), w = d.weights || {};
-  return Array.from({ length: 14 }, (_, i) => {
-    const day = Math.floor(i / 2), morning = i % 2 === 0, items = [];
-    meds.forEach(m => { if (!(m.days || []).includes(day)) return;
-      const n = (m.times || []).filter(tm => (tm < "14:00") === morning).length * (m.units || 1); if (n) items.push({ m, n }); });
+  const meds = boxMeds(d), w = d.weights || {}, times = boxTimes(d);
+  return Array.from({ length: 28 }, (_, i) => {
+    const day = Math.floor(i / 4), dose = i % 4, items = [];
+    if (times[dose]) meds.forEach(m => { if (!(m.days || []).includes(day)) return;
+      const n = (m.times || []).filter(tm => doseOf(tm, times) === dose).length * (m.units || 1); if (n) items.push({ m, n }); });
     const known = items.length && items.every(x => w[x.m.id] > 0);
-    return { n: i + 1, day, morning, items, mg: known ? items.reduce((s, x) => s + x.n * w[x.m.id], 0) : null };
+    return { n: i + 1, day, dose, time: times[dose], items, mg: known ? items.reduce((s, x) => s + x.n * w[x.m.id], 0) : null };
   });
 }
 
@@ -154,7 +169,7 @@ export function openBoxRefill(d) {
   const t = L(), b = t.box, loads = (d.status && d.status.loads) || {};
   const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(document.documentElement.lang || "it", { weekday: "long" });
   const rows = boxPlan(d).map(c => { const st = loads[c.n];
-    return '<li class="comp"><div class="row-wrap"><h3>' + esc(fmt(b.comp, { n: c.n })) + '</h3><span class="muted">' + esc(fmt(c.morning ? b.slot_m : b.slot_e, { d: dayName(c.day) })) + "</span>" +
+    return '<li class="comp"><div class="row-wrap"><h3>' + esc(fmt(b.comp, { n: c.n })) + '</h3><span class="muted">' + esc(c.time ? fmt(b.slot, { d: dayName(c.day), k: c.dose + 1, t: c.time }) : fmt(b.slot_off, { d: dayName(c.day), k: c.dose + 1 })) + "</span>" +
       (st === "ok" || st === "bad" ? '<span class="tag ' + (st === "ok" ? "ok" : "late") + '">' + esc(st === "ok" ? b.load_ok : b.load_bad) + "</span>" : "") + "</div>" +
       (c.items.length ? '<p class="meta">' + c.items.map(x => esc(x.n + "× " + x.m.name)).join(" · ") + (c.mg ? " · " + esc(fmt(b.exp_w, { g: (c.mg / 1000).toFixed(2) })) : "") + "</p>" : '<p class="meta muted">' + esc(b.comp_empty) + "</p>") + "</li>"; }).join("");
   modal('<div class="stack">' + sheetHead(b.refill) + '<p class="muted">' + esc(b.refill_lead) + '</p><ul class="boxes">' + rows + "</ul></div>");

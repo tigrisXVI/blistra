@@ -5,6 +5,7 @@ import { esc, fmt, ymd, addDays, dow, hm, toMin, parseYmd, daysBetween, nowMinut
 import { patients, patientById, currentPatientId, dosesFor, statusOf, logFor, alerts, stockLevel, daysLeft, rxDays, nextOccurrence } from "../domain.js";
 import { icon, medVisual, avatar, pillSVG } from "../ui.js";
 import { alertList, patientChips } from "./today.js";
+import { boxTimes } from "../forms.js";
 import { langSwitch } from "./landing.js";
 import { ADMIN_NAME } from "../config.js";
 
@@ -60,7 +61,7 @@ function boxPanel() {
     const online = seen && Date.now() - seen < 4 * 60000;
     return '<li class="box-row"><span class="f-ico">' + icon("cube", 26) + "</span><div><div class=\"row-wrap\"><h3>" + esc(d.name) + "</h3>" +
       '<span class="tag ' + (online ? "ok" : seen ? "due" : "") + '">' + esc(online ? b.online : seen ? fmt(b.offline, { t: ago(seen) }) : b.never) + "</span></div>" +
-      '<p class="meta">' + esc(fmt(b.summary, { p: p ? p.name : "?", m: d.morning, e: d.evening })) + "</p>" +
+      '<p class="meta">' + esc(fmt(b.summary, { p: p ? p.name : "?", t: boxTimes(d).filter(Boolean).join(" · ") })) + "</p>" +
       (online && b.state[st.state] ? '<p class="meta">' + esc(b.state[st.state]) + "</p>" : "") +
       (b.outcome[st.outcome] ? '<p class="meta">' + esc(b.outcome[st.outcome]) + "</p>" : "") +
       '</div><div class="box-act"><button class="btn sm" data-refill-box="' + esc(d.id) + '">' + esc(b.refill) + '</button><button class="btn sm ghost" data-edit-box="' + esc(d.id) + '">' + esc(b.setup) + "</button></div></li>";

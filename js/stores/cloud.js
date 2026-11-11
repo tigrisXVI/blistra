@@ -214,7 +214,7 @@ export async function cloudStore() {
     async saveReminder(r) { await setDoc(doc(db, "families", fid(), "reminders", r.id), strip(r)); },
     async deleteReminder(id) { await deleteDoc(doc(db, "families", fid(), "reminders", id)); },
     // The box itself writes only its "status"; merge keeps it when the family edits the settings.
-    async saveDevice(d) { await setDoc(doc(db, "families", fid(), "devices", d.id), { name: d.name, patientId: d.patientId, morning: d.morning, evening: d.evening, weights: d.weights || {} }, { mergeFields: ["name", "patientId", "morning", "evening", "weights"] }); },
+    async saveDevice(d) { await setDoc(doc(db, "families", fid(), "devices", d.id), { name: d.name, patientId: d.patientId, times: d.times, weights: d.weights || {}, morning: deleteField(), evening: deleteField() }, { mergeFields: ["name", "patientId", "times", "weights", "morning", "evening"] }); },
     async deleteDevice(id) { await deleteDoc(doc(db, "families", fid(), "devices", id)); },
 
     // ---- administrator only (the rules refuse these calls to anyone else) -------------

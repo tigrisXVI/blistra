@@ -316,10 +316,10 @@ document.addEventListener("submit", e => {
   }
   if (id === "patform") { const n = g("p-name").value.trim(); if (!n) return; const p = { id: e.target.dataset.pid, name: n, color: g("p-color").value }; closeModal(); act(() => store.savePatient(p)); return; }
   if (id === "boxform") {
-    const n = g("b-name").value.trim(), m = g("b-morning").value, ev = g("b-evening").value;
-    if (!n || !/^\d\d:\d\d$/.test(m) || !/^\d\d:\d\d$/.test(ev)) return;
+    const n = g("b-name").value.trim(), times = [...e.target.querySelectorAll("[data-btime]")].map(i => /^\d\d:\d\d$/.test(i.value) ? i.value : "");
+    if (!n || !times[0]) return;
     const weights = {}; e.target.querySelectorAll("[data-cal]").forEach(i => { const v = Math.round(Number(i.value)); if (v >= 1 && v <= 5000) weights[i.dataset.cal] = v; });
-    const d = { id: e.target.dataset.id, name: n.slice(0, 40), patientId: g("b-pat").value, morning: m, evening: ev, weights };
+    const d = { id: e.target.dataset.id, name: n.slice(0, 40), patientId: g("b-pat").value, times, weights };
     closeModal(); act(() => store.saveDevice(d)); return;
   }
   if (id === "lockform") {

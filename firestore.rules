@@ -20,6 +20,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ---- helpers ------------------------------------------------------------------------
+    // A pill box dose time: "HH:MM", or "" when that dose is not used.
+    function boxTime(t) { return t is string && (t == "" || t.matches("[0-2][0-9]:[0-5][0-9]")); }
     function signedIn() { return request.auth != null; }
     function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
     function fam(fid) { return get(/databases/$(database)/documents/families/$(fid)).data; }
@@ -131,9 +133,10 @@ service cloud.firestore {
       match /devices/{devId} {
         allow read, delete: if isMember(fid);
         allow create, update: if isMember(fid)
-          && incoming().keys().hasOnly(["name", "patientId", "morning", "evening", "weights", "status"])
+          && incoming().keys().hasOnly(["name", "patientId", "times", "weights", "status"])
           && str(incoming().name, 40) && str(incoming().patientId, 40)
-          && incoming().morning.matches("[0-2][0-9]:[0-5][0-9]") && incoming().evening.matches("[0-2][0-9]:[0-5][0-9]")
+          && incoming().times is list && incoming().times.size() == 4 && boxTime(incoming().times[0]) && boxTime(incoming().times[1])
+          && boxTime(incoming().times[2]) && boxTime(incoming().times[3]) && incoming().times[0] != ""
           && (!("weights" in incoming()) || (incoming().weights is map && incoming().weights.size() <= 40))
           && (!("status" in incoming()) || (incoming().status is map && incoming().status.size() <= 12));
       }
