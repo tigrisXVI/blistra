@@ -15,13 +15,8 @@ export function firebase() {
     const app = appM.initializeApp(firebaseConfig);
     const auth = authM.getAuth(app);
     auth.languageCode = "it";
-    let db;
-    try {
-      // Keeps a copy on the device so the app opens offline and syncs later.
-      db = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) });
-    } catch (e) {
-      db = fs.getFirestore(app);
-    }
+    // In-memory cache only: the copy kept on the device could block the app when several tabs were open.
+    const db = fs.getFirestore(app);
     return { app, auth, db, authM, fs };
   })();
   return ready;

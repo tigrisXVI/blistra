@@ -114,7 +114,7 @@ document.addEventListener("focusout", () => { if (pending) setTimeout(() => { if
 function errText(e) {
   const t = L(), code = (e && e.code) || e;
   if (code === "auth/weak-password") return t.pw_short;
-  return t.err[code] || t.err.generic;
+  return t.err[code] || (t.err.generic + " [" + String(code).slice(0, 60) + "]");
 }
 
 // ---- actions ---------------------------------------------------------------------------------

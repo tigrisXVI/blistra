@@ -28,7 +28,8 @@ export async function cloudStore() {
 
   let famUnsubs = [], userUnsub = null, currentFid;
   let pendingFid = null;   // a circle being created: wait for the server before listening to it
-  const onErr = e => { console.warn(e); A.error = e.code || e.message; emit(); };
+  // An error must never leave the loading screen up: show it instead.
+  const onErr = e => { console.warn(e); A.error = e.code || e.message; A.loading = false; A.familyLoading = false; emit(); };
   const clearFam = () => { famUnsubs.forEach(u => u()); famUnsubs = []; };
   const me = () => auth.currentUser.uid;
   const fid = () => A.family && A.family.id;
@@ -81,7 +82,7 @@ export async function cloudStore() {
       A.needsConsent = !(d.consent && d.consent.health && d.consent.age14);
       if (d.name) A.user.name = d.name;
       const want = A.familyIds.includes(prefs.lastFamily) ? prefs.lastFamily : (A.familyIds[0] || null);
-      if (want !== currentFid && want !== pendingFid) subscribeFamily(want);
+      try { if (want !== currentFid && want !== pendingFid) subscribeFamily(want); } catch (e) { onErr(e); }
       A.loading = false; emit();
       for (const f of A.familyIds) {
         if (A.familyNames[f]) continue;
