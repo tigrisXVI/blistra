@@ -186,14 +186,16 @@ document.addEventListener("click", e => {
   if (ds.edit) { const m = A.meds.find(x => x.id === ds.edit); if (m) openMedForm(m); return; }
   if (ds.sheet) { const m = A.meds.find(x => x.id === ds.sheet); if (m) openSheet(m); return; }
   if (ds.addBox) { const m = A.meds.find(x => x.id === ds.addBox); if (m && m.stock && m.stock.box) act(async () => { await store.addStock(m.id, m.stock.box); toast("+" + m.stock.box + ", " + m.name); }); return; }
-  if (ds.addTime !== undefined) { syncMedDraft(); drafts.med.times.push("12:00"); drawMedForm(""); return; }
-  if (ds.rmTime) { syncMedDraft(); const d = drafts.med, tm = d.times[+ds.rmTime]; d.times.splice(+ds.rmTime, 1); delete d.deadlines[tm]; drawMedForm(""); return; }
-  if (ds.day) { syncMedDraft(); const d = drafts.med, i = +ds.day; d.days = d.days.includes(i) ? d.days.filter(x => x !== i) : [...d.days, i].sort(); drawMedForm(""); return; }
-  if (ds.allDays !== undefined) { syncMedDraft(); drafts.med.days = [0, 1, 2, 3, 4, 5, 6]; drawMedForm(""); return; }
-  if (ds.food) { syncMedDraft(); drafts.med.food = ds.food; drawMedForm(""); return; }
-  if (ds.color) { syncMedDraft(); drafts.med.color = ds.color; drawMedForm(""); return; }
-  if (ds.shape) { syncMedDraft(); drafts.med.shape = ds.shape; drawMedForm(""); return; }
-  if (ds.photoRm !== undefined) { syncMedDraft(); drafts.med.photo = ""; drawMedForm(""); return; }
+  // The medicine form: taps change only what was tapped, so the page neither jumps nor flickers.
+  const press = (sel, on) => document.querySelectorAll("#medform " + sel).forEach(el => el.setAttribute("aria-pressed", on(el)));
+  if (ds.addTime !== undefined) { syncMedDraft(); drafts.med.times.push("12:00"); drawMedForm("", true); return; }
+  if (ds.rmTime) { syncMedDraft(); const d = drafts.med, tm = d.times[+ds.rmTime]; d.times.splice(+ds.rmTime, 1); delete d.deadlines[tm]; drawMedForm("", true); return; }
+  if (ds.day) { const d = drafts.med, i = +ds.day; d.days = d.days.includes(i) ? d.days.filter(x => x !== i) : [...d.days, i].sort(); press("[data-day]", el => d.days.includes(+el.dataset.day)); return; }
+  if (ds.allDays !== undefined) { drafts.med.days = [0, 1, 2, 3, 4, 5, 6]; press("[data-day]", () => true); return; }
+  if (ds.food) { drafts.med.food = ds.food; press("[data-food]", el => el.dataset.food === ds.food); return; }
+  if (ds.color) { syncMedDraft(); drafts.med.color = ds.color; drawMedForm("", true); return; }
+  if (ds.shape) { syncMedDraft(); drafts.med.shape = ds.shape; drawMedForm("", true); return; }
+  if (ds.photoRm !== undefined) { syncMedDraft(); drafts.med.photo = ""; drawMedForm("", true); return; }
   if (ds.delMed) { const m = A.meds.find(x => x.id === ds.delMed); if (b.dataset.armed) { act(() => store.deleteMed(ds.delMed)); closeModal(); } else { b.dataset.armed = "1"; b.textContent = fmt(t.confirm_del, { m: m ? m.name : "" }); } return; }
   if (ds.addBoxDevice !== undefined) { if (!Object.keys(A.family.patients || {}).length) { toast(t.need_patient); return; } openBoxForm(null, A.family.id); return; }
   if (ds.refillBox) { const d = A.devices.find(x => x.id === ds.refillBox); if (d) openBoxRefill(d); return; }

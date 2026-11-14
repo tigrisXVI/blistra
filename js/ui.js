@@ -95,10 +95,14 @@ export function blisterFlat(pills) {
 // ---- dialog layer ----------------------------------------------------------------
 
 let lastFocus = null;
-export function modal(html, { wide = false, label = "" } = {}) {
+export function modal(html, { wide = false, label = "", keep = false } = {}) {
   const layer = document.getElementById("layer");
   if (!layer.firstChild) lastFocus = document.activeElement;
-  layer.innerHTML = '<div class="scrim" data-close-bg><div class="sheet' + (wide ? " wide" : "") + '" role="dialog" aria-modal="true"' + (label ? ' aria-label="' + esc(label) + '"' : "") + ">" + html + "</div></div>";
+  // keep: the same dialog is being redrawn after a tap, so it must stay where the person was looking.
+  const old = keep && layer.querySelector(".sheet");
+  const top = old ? old.scrollTop : 0;
+  layer.innerHTML = '<div class="scrim" data-close-bg><div class="sheet' + (wide ? " wide" : "") + '"' + (old ? ' style="animation:none"' : "") + ' role="dialog" aria-modal="true"' + (label ? ' aria-label="' + esc(label) + '"' : "") + ">" + html + "</div></div>";
+  if (old) { layer.querySelector(".sheet").scrollTop = top; return; }
   const f = layer.querySelector("[autofocus], .sheet input:not([type=hidden]):not(.sr), .sheet select, .sheet button");
   if (f) f.focus({ preventScroll: true });
 }

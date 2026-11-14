@@ -28,7 +28,7 @@ export function openMedForm(med) {
   drawMedForm("");
 }
 
-export function drawMedForm(err) {
+export function drawMedForm(err, keep) {
   const t = L(), d = drafts.med;
   const ps = patients().map(p => '<option value="' + esc(p.id) + '"' + (p.id === d.patientId ? " selected" : "") + ">" + esc(p.name) + "</option>").join("");
   const times = d.times.map((tm, i) => '<div class="time-row"><label class="f">' + esc(t.f_times) + " " + (i + 1) + '<input type="time" data-time="' + i + '" value="' + esc(tm) + '"></label>' +
@@ -53,7 +53,7 @@ export function drawMedForm(err) {
     '<label class="f">' + esc(t.f_note) + '<input type="text" id="f-note" value="' + esc(d.note) + '" placeholder="' + esc(t.f_note_ph) + '" maxlength="100"></label></fieldset>' +
     "<fieldset><legend>" + esc(t.f_stock) + '</legend><div class="grid3"><label class="f">' + esc(t.f_count) + '<input type="number" id="f-count" min="0" max="9999" step="1" value="' + (d.stock.count == null ? "" : d.stock.count) + '"></label><label class="f">' + esc(t.f_box) + '<input type="number" id="f-box" min="1" max="999" step="1" value="' + (d.stock.box || "") + '"></label><label class="f">' + esc(t.f_thr) + '<input type="number" id="f-thr" min="1" max="90" step="1" value="' + (d.stock.threshold || 7) + '"></label></div></fieldset>' +
     "<fieldset><legend>" + esc(t.f_rx) + '</legend><div class="grid2"><label class="f">' + esc(t.f_doctor) + '<input type="text" id="f-doc" value="' + esc(d.rx.doctor) + '" maxlength="50"></label><label class="f">' + esc(t.f_expires) + '<input type="date" id="f-exp" value="' + esc(d.rx.expires) + '"></label></div><label class="f">' + esc(t.f_rx_note) + '<input type="text" id="f-rxn" value="' + esc(d.rx.note) + '" placeholder="' + esc(t.f_rx_note_ph) + '" maxlength="100"></label></fieldset>' +
-    actions(d._new, 'data-del-med="' + esc(d.id) + '"') + "</form>", { wide: true });
+    actions(d._new, 'data-del-med="' + esc(d.id) + '"') + "</form>", { wide: true, keep: !!keep });
 }
 
 export function syncMedDraft() {
