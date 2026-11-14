@@ -1,7 +1,7 @@
 // Blistra service worker: the app opens even offline.
 // Network first (so updates arrive at once), cached copy as fallback.
 // Only this site's own files are cached; Firebase traffic is never touched.
-const CACHE = "blistra-v3.3";
+const CACHE = "blistra-v3.3.1";
 const SHELL = ["./", "index.html", "css/blistra.css", "js/main.js", "manifest.webmanifest", "img/icon.svg", "img/icon-192.png",
   "fonts/atkinson-hyperlegible-latin-400-normal.woff2", "fonts/atkinson-hyperlegible-latin-700-normal.woff2", "fonts/bricolage-grotesque-latin-wght-normal.woff2"];
 

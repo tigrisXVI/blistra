@@ -27,6 +27,7 @@ export async function cloudStore() {
     arrayUnion, arrayRemove, increment, deleteField, query, where, documentId, serverTimestamp } = fs;
 
   let famUnsubs = [], userUnsub = null, currentFid;
+  let pendingFid = null;   // a circle being created: wait for the server before listening to it
   const onErr = e => { console.warn(e); A.error = e.code || e.message; emit(); };
   const clearFam = () => { famUnsubs.forEach(u => u()); famUnsubs = []; };
   const me = () => auth.currentUser.uid;
@@ -80,7 +81,7 @@ export async function cloudStore() {
       A.needsConsent = !(d.consent && d.consent.health && d.consent.age14);
       if (d.name) A.user.name = d.name;
       const want = A.familyIds.includes(prefs.lastFamily) ? prefs.lastFamily : (A.familyIds[0] || null);
-      if (want !== currentFid) subscribeFamily(want);
+      if (want !== currentFid && want !== pendingFid) subscribeFamily(want);
       A.loading = false; emit();
       for (const f of A.familyIds) {
         if (A.familyNames[f]) continue;
@@ -172,7 +173,10 @@ export async function cloudStore() {
       b.set(doc(db, "invites", code), { familyId: f.id, createdBy: me() });
       b.update(doc(db, "users", me()), { familyIds: arrayUnion(f.id) });
       prefs.lastFamily = f.id; savePrefs();
-      await b.commit();
+      // Listening before the server has the circle would be refused by the rules and never recover.
+      pendingFid = f.id;
+      try { await b.commit(); } finally { pendingFid = null; }
+      subscribeFamily(f.id);
     },
     async joinFamily(code) {
       code = String(code || "").replace(/\s/g, "").toUpperCase();
