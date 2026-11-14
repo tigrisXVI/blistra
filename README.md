@@ -61,3 +61,7 @@ vendor/               Firebase e three.js serviti in locale
 Blistra è un aiuto per organizzarsi e non sostituisce le indicazioni del medico o del farmacista.
 
 Contatti: tigrisedicesimo@gmail.com
+
+## Scatoletta Blistra
+
+Blistra si collega a un portapillole motorizzato open source, da stampare in 3D: fino a 4 dosi al giorno per una settimana, con conferma dal peso. Progetto, modello 3D e firmware: https://github.com/tigrisXVI/scatoletta-blistra
