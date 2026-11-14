@@ -256,7 +256,7 @@ document.addEventListener("change", async e => {
     syncMedDraft();
     try { drafts.med.photo = (await compressImage(el.files[0], { max: 480, quality: 0.72, maxChars: LIMITS.medPhotoChars })).src; }
     catch (err) { toast(L().err.generic); }
-    drawMedForm(""); return;
+    drawMedForm("", true); return;
   }
   if (el.id === "st-upload" && el.files) { St.studio.busy = true; render(); await St.uploadImages(store, el.files); St.studio.busy = false; render(); return; }
   if (el.dataset && el.dataset.media) {
