@@ -1,7 +1,7 @@
 // Dialogs with forms: medicine, reminder, person cared for, medicine sheet, lock.
 // Each form keeps a draft object while open, so redrawing never loses what was typed.
 
-import { A, L } from "./state.js";
+import { A, L, prefs } from "./state.js";
 import { esc, fmt, uid, ymd, addDays, clone } from "./util.js";
 import { patients, patientById, currentPatientId, COLORS, PCOLORS } from "./domain.js";
 import { modal, medVisual, pillSVG, icon, toast } from "./ui.js";
@@ -124,6 +124,7 @@ export function openBoxForm(dev, familyId) {
   modal('<form class="stack" id="boxform" data-id="' + esc(d.id) + '">' + sheetHead(isNew ? b.add : d.name) +
     '<label class="f">' + esc(b.name) + '<input type="text" id="b-name" value="' + esc(d.name) + '" placeholder="' + esc(b.name_ph) + '" maxlength="40" required></label>' +
     '<label class="f">' + esc(b.for_who) + '<select id="b-pat">' + ps + "</select></label>" +
+    '<label class="f">' + esc(b.model) + '<select id="b-model">' + ["v05", "v08"].map(v => '<option value="' + v + '"' + (boxModel(d) === v ? " selected" : "") + ">" + esc(b["model_" + v]) + "</option>").join("") + '</select></label><p class="hint">' + esc(b.model_hint) + "</p>" +
     "<fieldset><legend>" + esc(b.times) + '</legend><div class="grid2">' + [0, 1, 2, 3].map(i =>
       '<label class="f">' + esc(fmt(b.dose_n, { n: i + 1 })) + '<input type="time" data-btime="' + i + '" value="' + esc(tt[i] || "") + '"' + (i === 0 ? " required" : "") + "></label>").join("") + "</div></fieldset>" +
     '<p class="hint">' + esc(b.split) + "</p>" +
@@ -169,17 +170,25 @@ export function boxPlan(d) {
   });
 }
 
-/** Guided refill: compartment by compartment, with the check the box made by weight. */
+/** Which box this is (kept on this phone): "v05" one carousel, "v08" two wheels with one door per compartment. */
+export function boxModel(d) { return (prefs.boxModels || {})[d.id] || "v05"; }
+
+/** Guided refill: compartment by compartment, with the check the box made by weight.
+ *  On the two-wheel box (v0.8) odd compartments are on the left wheel and even ones on the right; the number is printed on the hub. */
 export function openBoxRefill(d) {
-  const t = L(), b = t.box, loads = (d.status && d.status.loads) || {};
+  const t = L(), b = t.box, loads = (d.status && d.status.loads) || {}, due = boxModel(d) === "v08";
   const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(document.documentElement.lang || "it", { weekday: "long" });
-  const rows = boxPlan(d).map(c => { const st = loads[c.n];
-    return '<li class="comp"><div class="row-wrap"><h3>' + esc(fmt(b.comp, { n: c.n })) + '</h3><span class="muted">' + esc(c.time ? fmt(b.slot, { d: dayName(c.day), k: c.dose + 1, t: c.time }) : fmt(b.slot_off, { d: dayName(c.day), k: c.dose + 1 })) + "</span>" +
+  const riga = c => { const st = loads[c.n];
+    return '<li class="comp"><div class="row-wrap"><h3>' + esc(fmt(b.comp, { n: c.n })) + '</h3>' + (due ? '<span class="tag">' + esc(c.n % 2 ? b.wheel_l : b.wheel_r) + "</span>" : "") + '<span class="muted">' + esc(c.time ? fmt(b.slot, { d: dayName(c.day), k: c.dose + 1, t: c.time }) : fmt(b.slot_off, { d: dayName(c.day), k: c.dose + 1 })) + "</span>" +
       (st === "ok" || st === "bad" ? '<span class="tag ' + (st === "ok" ? "ok" : "late") + '">' + esc(st === "ok" ? b.load_ok : b.load_bad) + "</span>" : "") +
       (c.light.length ? '<span class="tag late">' + esc(b.light_tag) + "</span>" : "") + "</div>" +
       (c.items.length ? '<p class="meta">' + c.items.map(x => esc(x.n + "× " + x.m.name)).join(" · ") + (c.mg ? " · " + esc(fmt(b.exp_w, { g: (c.mg / 1000).toFixed(2) })) : "") + "</p>" : '<p class="meta muted">' + esc(b.comp_empty) + "</p>") +
-      (c.light.length ? '<p class="hint warn">' + esc(fmt(b.light_dose, { m: c.light.join(", "), n: MIN_MG })) + "</p>" : "") + "</li>"; }).join("");
-  modal('<div class="stack">' + sheetHead(b.refill) + '<p class="muted">' + esc(b.refill_lead) + '</p><ul class="boxes">' + rows + "</ul></div>");
+      (c.light.length ? '<p class="hint warn">' + esc(fmt(b.light_dose, { m: c.light.join(", "), n: MIN_MG })) + "</p>" : "") + "</li>"; };
+  const piano = boxPlan(d);
+  const corpo = due
+    ? [1, 0].map(dispari => '<h3 class="wheel-head">' + esc(dispari ? b.wheel_l_head : b.wheel_r_head) + '</h3><ul class="boxes">' + piano.filter(c => c.n % 2 === dispari).map(riga).join("") + "</ul>").join("")
+    : '<ul class="boxes">' + piano.map(riga).join("") + "</ul>";
+  modal('<div class="stack">' + sheetHead(b.refill) + '<p class="muted">' + esc(due ? b.refill_lead8 : b.refill_lead) + "</p>" + corpo + "</div>");
 }
 
 // ---- lock the phone to one person ---------------------------------------------------

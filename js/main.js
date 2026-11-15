@@ -322,6 +322,7 @@ document.addEventListener("submit", e => {
     if (!n || !times[0]) return;
     const weights = {}; e.target.querySelectorAll("[data-cal]").forEach(i => { const v = Math.round(Number(i.value)); if (v >= 1 && v <= 5000) weights[i.dataset.cal] = v; });
     const d = { id: e.target.dataset.id, name: n.slice(0, 40), patientId: g("b-pat").value, times, weights };
+    prefs.boxModels = Object.assign({}, prefs.boxModels, { [d.id]: g("b-model").value === "v08" ? "v08" : "v05" }); savePrefs();   // resta su questo telefono
     closeModal(); act(() => store.saveDevice(d)); return;
   }
   if (id === "lockform") {
