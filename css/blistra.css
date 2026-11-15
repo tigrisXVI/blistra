@@ -75,6 +75,7 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .err { color: var(--late); font-weight: 700; }
 .err:empty { display: none; }
 .hint { display: block; color: var(--muted); font-size: .86rem; font-weight: 400; }
+.hint.warn { color: var(--late); }
 .i { flex: none; }
 .i.up { transform: rotate(-90deg); } .i.down { transform: rotate(90deg); }
 .skip { position: absolute; left: 12px; top: -60px; z-index: 50; background: var(--ink); color: var(--paper); padding: 10px 14px; border-radius: var(--r-sm); }

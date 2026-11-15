@@ -128,12 +128,16 @@ export function openBoxForm(dev, familyId) {
       '<label class="f">' + esc(fmt(b.dose_n, { n: i + 1 })) + '<input type="time" data-btime="' + i + '" value="' + esc(tt[i] || "") + '"' + (i === 0 ? " required" : "") + "></label>").join("") + "</div></fieldset>" +
     '<p class="hint">' + esc(b.split) + "</p>" +
     (isNew ? "" : "<fieldset><legend>" + esc(b.cal) + '</legend><p class="hint">' + esc(b.cal_desc) + "</p>" + (boxMeds(d).map(m =>
-      '<label class="f calrow"><span>' + esc(m.name) + '</span><span class="unit"><input type="number" inputmode="numeric" min="1" max="5000" step="1" data-cal="' + esc(m.id) + '" value="' + esc(String((d.weights || {})[m.id] || "")) + '"> mg</span></label>').join("") || '<p class="muted">' + esc(b.cal_none) + "</p>") + "</fieldset>") +
+      '<label class="f calrow"><span>' + esc(m.name) + '</span><span class="unit"><input type="number" inputmode="numeric" min="1" max="5000" step="1" data-cal="' + esc(m.id) + '" value="' + esc(String((d.weights || {})[m.id] || "")) + '"> mg</span></label>' +
+      ((d.weights || {})[m.id] > 0 && (d.weights || {})[m.id] < MIN_MG ? '<p class="hint warn">' + esc(fmt(b.light_one, { n: MIN_MG })) + "</p>" : "")).join("") || '<p class="muted">' + esc(b.cal_none) + "</p>") + "</fieldset>") +
     (isNew ? "" : "<fieldset><legend>" + esc(b.ids) + '</legend><p class="hint">' + esc(b.ids_desc) + "</p>" +
       '<p class="idline"><span>' + esc(b.id_circle) + '</span><code>' + esc(familyId) + '</code><button type="button" class="btn sm ghost" data-copy="' + esc(familyId) + '">' + esc(t.copy) + "</button></p>" +
       '<p class="idline"><span>' + esc(b.id_box) + '</span><code>' + esc(d.id) + '</code><button type="button" class="btn sm ghost" data-copy="' + esc(d.id) + '">' + esc(t.copy) + "</button></p></fieldset>") +
     actions(isNew, 'data-del-box="' + esc(d.id) + '"') + "</form>");
 }
+
+/** Below this weight the box's scale can't tell whether a pill is there or not. */
+export const MIN_MG = 20;
 
 /** The medicines that go into a box: those of the person it belongs to. */
 function boxMeds(d) { return A.meds.filter(m => m.patientId === d.patientId); }
@@ -160,7 +164,8 @@ export function boxPlan(d) {
     if (times[dose]) meds.forEach(m => { if (!(m.days || []).includes(day)) return;
       const n = (m.times || []).filter(tm => doseOf(tm, times) === dose).length * (m.units || 1); if (n) items.push({ m, n }); });
     const known = items.length && items.every(x => w[x.m.id] > 0);
-    return { n: i + 1, day, dose, time: times[dose], items, mg: known ? items.reduce((s, x) => s + x.n * w[x.m.id], 0) : null };
+    const light = items.filter(x => w[x.m.id] > 0 && w[x.m.id] < MIN_MG).map(x => x.m.name);
+    return { n: i + 1, day, dose, time: times[dose], items, light, mg: known ? items.reduce((s, x) => s + x.n * w[x.m.id], 0) : null };
   });
 }
 
@@ -170,8 +175,10 @@ export function openBoxRefill(d) {
   const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(document.documentElement.lang || "it", { weekday: "long" });
   const rows = boxPlan(d).map(c => { const st = loads[c.n];
     return '<li class="comp"><div class="row-wrap"><h3>' + esc(fmt(b.comp, { n: c.n })) + '</h3><span class="muted">' + esc(c.time ? fmt(b.slot, { d: dayName(c.day), k: c.dose + 1, t: c.time }) : fmt(b.slot_off, { d: dayName(c.day), k: c.dose + 1 })) + "</span>" +
-      (st === "ok" || st === "bad" ? '<span class="tag ' + (st === "ok" ? "ok" : "late") + '">' + esc(st === "ok" ? b.load_ok : b.load_bad) + "</span>" : "") + "</div>" +
-      (c.items.length ? '<p class="meta">' + c.items.map(x => esc(x.n + "× " + x.m.name)).join(" · ") + (c.mg ? " · " + esc(fmt(b.exp_w, { g: (c.mg / 1000).toFixed(2) })) : "") + "</p>" : '<p class="meta muted">' + esc(b.comp_empty) + "</p>") + "</li>"; }).join("");
+      (st === "ok" || st === "bad" ? '<span class="tag ' + (st === "ok" ? "ok" : "late") + '">' + esc(st === "ok" ? b.load_ok : b.load_bad) + "</span>" : "") +
+      (c.light.length ? '<span class="tag late">' + esc(b.light_tag) + "</span>" : "") + "</div>" +
+      (c.items.length ? '<p class="meta">' + c.items.map(x => esc(x.n + "× " + x.m.name)).join(" · ") + (c.mg ? " · " + esc(fmt(b.exp_w, { g: (c.mg / 1000).toFixed(2) })) : "") + "</p>" : '<p class="meta muted">' + esc(b.comp_empty) + "</p>") +
+      (c.light.length ? '<p class="hint warn">' + esc(fmt(b.light_dose, { m: c.light.join(", "), n: MIN_MG })) + "</p>" : "") + "</li>"; }).join("");
   modal('<div class="stack">' + sheetHead(b.refill) + '<p class="muted">' + esc(b.refill_lead) + '</p><ul class="boxes">' + rows + "</ul></div>");
 }
 
