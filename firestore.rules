@@ -133,12 +133,13 @@ service cloud.firestore {
       match /devices/{devId} {
         allow read, delete: if isMember(fid);
         allow create, update: if isMember(fid)
-          && incoming().keys().hasOnly(["name", "patientId", "times", "weights", "status"])
+          && incoming().keys().hasOnly(["name", "patientId", "times", "weights", "status", "cmd"])
           && str(incoming().name, 40) && str(incoming().patientId, 40)
           && incoming().times is list && incoming().times.size() == 4 && boxTime(incoming().times[0]) && boxTime(incoming().times[1])
           && boxTime(incoming().times[2]) && boxTime(incoming().times[3]) && incoming().times[0] != ""
           && (!("weights" in incoming()) || (incoming().weights is map && incoming().weights.size() <= 40))
-          && (!("status" in incoming()) || (incoming().status is map && incoming().status.size() <= 12));
+          && (!("status" in incoming()) || (incoming().status is map && incoming().status.size() <= 12))
+          && (!("cmd" in incoming()) || (incoming().cmd is map && incoming().cmd.size() <= 4));   // comandi alla scatoletta (sblocca le cassette)
       }
       match /logs/{day} {
         allow read, delete: if isMember(fid);

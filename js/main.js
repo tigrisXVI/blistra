@@ -198,6 +198,7 @@ document.addEventListener("click", e => {
   if (ds.photoRm !== undefined) { syncMedDraft(); drafts.med.photo = ""; drawMedForm("", true); return; }
   if (ds.delMed) { const m = A.meds.find(x => x.id === ds.delMed); if (b.dataset.armed) { act(() => store.deleteMed(ds.delMed)); closeModal(); } else { b.dataset.armed = "1"; b.textContent = fmt(t.confirm_del, { m: m ? m.name : "" }); } return; }
   if (ds.addBoxDevice !== undefined) { if (!Object.keys(A.family.patients || {}).length) { toast(t.need_patient); return; } openBoxForm(null, A.family.id); return; }
+  if (ds.unlockBox) { const id = ds.unlockBox; act(async () => { await store.unlockBox(id); toast(t.box.unlock_sent); }); return; }
   if (ds.refillBox) { const d = A.devices.find(x => x.id === ds.refillBox); if (d) openBoxRefill(d); return; }
   if (ds.editBox) { const d = A.devices.find(x => x.id === ds.editBox); if (d) openBoxForm(d, A.family.id); return; }
   if (ds.delBox) { if (b.dataset.armed) { act(() => store.deleteDevice(ds.delBox)); closeModal(); } else { b.dataset.armed = "1"; b.textContent = t.box.confirm_del; } return; }

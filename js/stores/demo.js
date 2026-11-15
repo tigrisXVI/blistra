@@ -85,6 +85,7 @@ export function demoStore() {
     async saveReminder(r) { const i = D.reminders.findIndex(x => x.id === r.id); if (i >= 0) D.reminders[i] = r; else D.reminders.push(r); sync(); },
     async deleteReminder(id) { D.reminders = D.reminders.filter(r => r.id !== id); sync(); },
     async saveDevice(d) { const i = D.devices.findIndex(x => x.id === d.id); if (i >= 0) { D.devices[i] = { ...D.devices[i], ...d }; delete D.devices[i].morning; delete D.devices[i].evening; } else D.devices.push(d); sync(); },
-    async deleteDevice(id) { D.devices = D.devices.filter(d => d.id !== id); sync(); }
+    async deleteDevice(id) { D.devices = D.devices.filter(d => d.id !== id); sync(); },
+    async unlockBox(id) { const d = D.devices.find(x => x.id === id); if (d) { d.cmd = { unlock: Date.now(), by: "demo" }; sync(); } }
   };
 }

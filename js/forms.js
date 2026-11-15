@@ -188,7 +188,8 @@ export function openBoxRefill(d) {
   const corpo = due
     ? [1, 0].map(dispari => '<h3 class="wheel-head">' + esc(dispari ? b.wheel_l_head : b.wheel_r_head) + '</h3><ul class="boxes">' + piano.filter(c => c.n % 2 === dispari).map(riga).join("") + "</ul>").join("")
     : '<ul class="boxes">' + piano.map(riga).join("") + "</ul>";
-  modal('<div class="stack">' + sheetHead(b.refill) + '<p class="muted">' + esc(due ? b.refill_lead8 : b.refill_lead) + "</p>" + corpo + "</div>");
+  const sblocca = due ? '<div class="btn-row"><button type="button" class="btn primary" data-unlock-box="' + esc(d.id) + '">' + esc(b.unlock) + '</button></div><p class="hint">' + esc(b.unlock_hint) + "</p>" : "";
+  modal('<div class="stack">' + sheetHead(b.refill) + '<p class="muted">' + esc(due ? b.refill_lead8 : b.refill_lead) + "</p>" + sblocca + corpo + "</div>");
 }
 
 // ---- lock the phone to one person ---------------------------------------------------

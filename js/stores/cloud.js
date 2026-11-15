@@ -221,6 +221,8 @@ export async function cloudStore() {
     // The box itself writes only its "status"; merge keeps it when the family edits the settings.
     async saveDevice(d) { await setDoc(doc(db, "families", fid(), "devices", d.id), { name: d.name, patientId: d.patientId, times: d.times, weights: d.weights || {}, morning: deleteField(), evening: deleteField() }, { mergeFields: ["name", "patientId", "times", "weights", "morning", "evening"] }); },
     async deleteDevice(id) { await deleteDoc(doc(db, "families", fid(), "devices", id)); },
+    /** Asks the box to turn its cassette locks (the box reads cmd.unlock and relocks by itself when the cassettes are back). */
+    async unlockBox(id) { await updateDoc(doc(db, "families", fid(), "devices", id), { cmd: { unlock: Date.now(), by: me() } }); },
 
     // ---- administrator only (the rules refuse these calls to anyone else) -------------
     async listUsers() {
