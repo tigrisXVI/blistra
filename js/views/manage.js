@@ -2,7 +2,7 @@
 
 import { A, prefs, L } from "../state.js";
 import { esc, fmt, ymd, addDays, dow, hm, toMin, parseYmd, daysBetween, nowMinutes } from "../util.js";
-import { patients, patientById, currentPatientId, dosesFor, statusOf, logFor, alerts, stockLevel, daysLeft, rxDays, nextOccurrence } from "../domain.js";
+import { patients, patientById, currentPatientId, dosesFor, statusOf, logFor, alerts, stockLevel, daysLeft, rxDays, nextOccurrence, adherence } from "../domain.js";
 import { icon, medVisual, avatar, pillSVG } from "../ui.js";
 import { alertList, patientChips } from "./today.js";
 import { boxTimes } from "../forms.js";
@@ -130,6 +130,20 @@ export function viewReminders() {
     '<section class="panel stack"><h2 class="h-card">' + esc(t.calendar) + '</h2><p class="muted">' + esc(t.calendar_desc) + '</p><div><button class="btn sm" data-ics>' + icon("download", 16) + esc(t.calendar) + "</button></div></section></div>";
 }
 
+/** Adherence chart: one bar per week, split into doses confirmed by the box's scale and doses ticked by hand. */
+function adherencePanel(pid) {
+  const t = L(), a = t.adh, w = adherence(pid, 4), due = w.reduce((s, x) => s + x.due, 0);
+  if (!due) return '<section class="panel stack noprint"><h2 class="h-card">' + esc(a.title) + '</h2><p class="muted">' + esc(a.none) + "</p></section>";
+  const taken = w.reduce((s, x) => s + x.taken, 0), box = w.reduce((s, x) => s + x.box, 0), pct = v => Math.round(100 * v);
+  const col = x => { const hb = x.due ? x.box / x.due : 0, hh = x.due ? (x.taken - x.box) / x.due : 0;
+    return '<div class="adh-col"><span class="adh-num">' + (x.due ? pct(x.taken / x.due) + "%" : "–") + '</span><div class="adh-bar" role="img" aria-label="' +
+      esc(fmt(a.bar, { d: x.from.getDate() + " " + t.months[x.from.getMonth()].slice(0, 3), n: x.taken, m: x.due })) + '"><i class="adh-hand" style="height:' + pct(hh) + '%"></i><i class="adh-box" style="height:' + pct(hb) + '%"></i></div>' +
+      '<span class="adh-lab">' + esc(x.from.getDate() + " " + t.months[x.from.getMonth()].slice(0, 3)) + "</span></div>"; };
+  return '<section class="panel stack noprint"><h2 class="h-card">' + esc(a.title) + '</h2><p class="adh-tot">' + esc(fmt(a.total, { p: pct(taken / due), n: taken, m: due })) + "</p>" +
+    '<div class="adh">' + w.map(col).join("") + "</div>" +
+    '<p class="muted adh-leg"><span><i class="adh-box"></i>' + esc(fmt(a.box, { n: box })) + '</span><span><i class="adh-hand"></i>' + esc(fmt(a.hand, { n: taken - box })) + "</span></p></section>";
+}
+
 export function viewWeek() {
   const t = L(), pid = currentPatientId(), p = patientById(pid);
   if (!p) return '<p class="muted">' + esc(t.no_patients) + "</p>";
@@ -137,7 +151,7 @@ export function viewWeek() {
   const times = [...new Set(meds.flatMap(m => m.times || []))].sort((a, b) => toMin(a) - toMin(b));
   const rows = times.map(tm => '<tr><th scope="row" class="num">' + esc(tm) + "</th>" + [0, 1, 2, 3, 4, 5, 6].map(day => "<td>" +
     meds.filter(m => (m.times || []).includes(tm) && (m.days || []).includes(day)).map(m => '<div class="cellmed"><span class="box"></span>' + pillSVG(m.color, m.shape, 22) + "<span>" + esc(m.name) + "</span></div>").join("") + "</td>").join("") + "</tr>").join("");
-  return '<div class="stack">' + patientChips(pid) + '<div class="page-head"><div><h1 class="h-page">' + esc(t.week_title) + ", " + esc(p.name) + '</h1><p class="muted noprint">' + esc(t.week_sub) + '</p></div><button class="btn noprint" data-print>' + (prefs.lang === "it" ? "Stampa" : "Print") + "</button></div>" +
+  return '<div class="stack">' + patientChips(pid) + adherencePanel(pid) + '<div class="page-head"><div><h1 class="h-page">' + esc(t.week_title) + ", " + esc(p.name) + '</h1><p class="muted noprint">' + esc(t.week_sub) + '</p></div><button class="btn noprint" data-print>' + (prefs.lang === "it" ? "Stampa" : "Print") + "</button></div>" +
     (times.length ? '<div class="tablewrap"><table class="week"><thead><tr><th>' + esc(t.time) + "</th>" + t.days_short.map(d => "<th>" + esc(d) + "</th>").join("") + "</tr></thead><tbody>" + rows + "</tbody></table></div>" : '<p class="muted">' + esc(fmt(t.no_meds, { p: p.name })) + "</p>") + "</div>";
 }
 

@@ -26,7 +26,7 @@ function demoSeed() {
     patients: { [p1]: { name: "Maria", color: PCOLORS[0] }, [p2]: { name: "Giorgio", color: PCOLORS[1] } }, createdBy: me };
   const logs = {};
   const nowMin = now.getHours() * 60 + now.getMinutes();
-  for (let back = 6; back >= 0; back--) {
+  for (let back = 27; back >= 0; back--) {   // 4 settimane: serve al grafico dell'aderenza
     const d = addDays(now, -back), key = ymd(d), day = dow(d);
     logs[key] = {};
     const doses = [];
@@ -38,11 +38,11 @@ function demoSeed() {
       const k = entryKey(x.m.id, x.t), tm = toMin(x.t);
       let take;
       if (back === 0) take = tm <= nowMin && x !== leaveOpen;
-      else take = (i * 7 + back * 3) % 11 !== 0;
+      else take = (i * 7 + back * 3) % (back < 18 ? 23 : 7) !== 0;   // con la scatoletta si saltano meno dosi
       if (take) {
         const at = fromMin(tm + ((i * 5 + back) % 18));
-        const byLuca = (i + back) % 3 === 0;
-        logs[key][k] = { at, by: byLuca ? luca : "device", byName: byLuca ? "Luca" : fam.patients[x.m.patientId].name, ts: parseYmd(key).getTime() + toMin(at) * 60000 };
+        const byLuca = (i + back) % 3 === 0, byBox = x.m.patientId === p1 && back < 18 && !byLuca;   // da 18 giorni Maria usa la scatoletta
+        logs[key][k] = { at, by: byLuca ? luca : byBox ? "box" : "device", byName: byLuca ? "Luca" : byBox ? "Scatoletta" : fam.patients[x.m.patientId].name, ts: parseYmd(key).getTime() + toMin(at) * 60000 };
       }
     });
   }

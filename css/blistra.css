@@ -553,3 +553,16 @@ table.users th { font-size: .85rem; color: var(--muted); background: var(--paper
 
 .wheel-head { font-size: 1rem; margin: 14px 0 6px; }
 .meta.warn { color: var(--danger, #b42318); font-weight: 600; }
+
+/* Aderenza */
+.adh { display: flex; align-items: flex-end; gap: 12px; height: 150px; }
+.adh-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; }
+.adh-bar { flex: 1; width: min(56px, 70%); background: var(--foil-a); border: 1px solid var(--line); border-radius: var(--r-sm); display: flex; flex-direction: column-reverse; overflow: hidden; }
+.adh-bar i { display: block; width: 100%; }
+.adh-box { background: var(--ok); }
+.adh-hand { background: var(--ok-soft); }
+.adh-num { font-weight: 700; }
+.adh-lab { font-size: .85rem; color: var(--muted); }
+.adh-tot { font-size: 1.15rem; font-weight: 700; margin: 0; }
+.adh-leg { display: flex; gap: 18px; flex-wrap: wrap; }
+.adh-leg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }

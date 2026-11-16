@@ -72,6 +72,7 @@ export const T = {
     sheet_none: "Per questo farmaco non c'è ancora una scheda semplificata.", sheet_aifa: "Foglio illustrativo ufficiale su AIFA Medicinali", sheet_aifa_hint: "Apri il sito e cerca: {n}",
     // alarm overlay
     alarm_now: "È ora della medicina", alarm_again: "Non l'hai ancora presa", snooze: "Ricordamelo tra 10 minuti", alarm_rem: "Promemoria",
+    adh: { title: "Aderenza: le dosi prese", total: "{p}% delle dosi prese nelle ultime 4 settimane ({n} su {m})", box: "{n} date dalla scatoletta e confermate dal peso", hand: "{n} spuntate a mano", none: "Ancora nessuna dose da contare: torna tra qualche giorno.", bar: "Settimana dal {d}: {n} dosi prese su {m}" },
     week_title: "Schema della settimana", week_sub: "Da stampare e attaccare in cucina: si spunta la casella dopo ogni dose.", time: "Ora",
     days_short: ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"], days_long: ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"],
     months: ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"],
@@ -142,6 +143,7 @@ export const T = {
     sheet_disclaimer: "General plain-language summary written for Blistra, in Italian. The doctor's instructions and the official leaflet come first.",
     sheet_none: "There is no simplified sheet for this medicine yet.", sheet_aifa: "Official leaflet on AIFA Medicinali", sheet_aifa_hint: "Open the site and search: {n}",
     alarm_now: "Medicine time", alarm_again: "Not taken yet", snooze: "Remind me in 10 minutes", alarm_rem: "Reminder",
+    adh: { title: "Adherence: doses taken", total: "{p}% of doses taken in the last 4 weeks ({n} of {m})", box: "{n} dispensed by the pill box and confirmed by weight", hand: "{n} ticked by hand", none: "No doses to count yet: come back in a few days.", bar: "Week from {d}: {n} of {m} doses taken" },
     week_title: "Weekly sheet", week_sub: "Print it and stick it on the fridge: tick the box after each dose.", time: "Time",
     days_short: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], days_long: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],

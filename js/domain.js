@@ -72,6 +72,25 @@ export function remindersOn(date) {
   return out.sort((a, b) => a.at - b.at);
 }
 
+/** Adherence: for each of the last `weeks` weeks, doses that were due, taken, and taken from the pill box
+ *  (the box logs by: "box" after the scale has confirmed the dose). Doses still to come today are not counted. */
+export function adherence(pid, weeks = 4) {
+  const now = new Date(), today = ymd(now), nowMin = now.getHours() * 60 + now.getMinutes(), out = [];
+  for (let w = weeks - 1; w >= 0; w--) {
+    const r = { from: addDays(now, -(w * 7 + 6)), to: addDays(now, -w * 7), due: 0, taken: 0, box: 0 };
+    for (let i = 6; i >= 0; i--) {
+      const day = addDays(now, -(w * 7 + i));
+      dosesFor(day, pid).forEach(d => {
+        const lg = logFor(d.date, d.key);
+        if (!lg && d.date === today && ["later", "due"].includes(statusOf(d, nowMin))) return;
+        r.due++; if (lg) { r.taken++; if (lg.by === "box") r.box++; }
+      });
+    }
+    out.push(r);
+  }
+  return out;
+}
+
 /** Patient colours offered in the form. */
 export const PCOLORS = ["#C9772B", "#2C55D6", "#8A5CC2", "#C2416B", "#1E9E6E", "#7A6A2F"];
 /** Pill colours offered in the form. */
