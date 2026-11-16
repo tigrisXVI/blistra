@@ -53,6 +53,17 @@ function ago(ms) {
   return min < 60 ? fmt(b.ago_min, { n: min }) : min < 2880 ? fmt(b.ago_h, { n: Math.round(min / 60) }) : fmt(b.ago_d, { n: Math.round(min / 1440) });
 }
 
+/** v0.8 boxes report problems the family must see: an unlocked cassette, a wheel that lost its place, doses skipped by a power cut. */
+function v08Warnings(st, b) {
+  const w = [], side = k => k === "sx" ? b.wheel_l : b.wheel_r;
+  for (const k of ["sx", "dx"]) {
+    if (st.locks && st.locks[k] === "open") w.push(fmt(b.warn_lock, { w: side(k) }));
+    if (st.wheels && st.wheels[k] === "check") w.push(fmt(b.warn_wheel, { w: side(k) }));
+  }
+  for (const x of (Array.isArray(st.skipped) ? st.skipped.slice(-3) : [])) w.push(fmt(b.warn_skipped, { t: String(x.time || "?"), d: String(x.day || "") }));
+  return w.map(x => '<p class="meta warn">' + esc(x) + "</p>").join("");
+}
+
 /** The pill boxes linked to this circle, with their live status. */
 function boxPanel() {
   const t = L(), b = t.box;
@@ -64,6 +75,7 @@ function boxPanel() {
       '<p class="meta">' + esc(fmt(b.summary, { p: p ? p.name : "?", t: boxTimes(d).filter(Boolean).join(" · ") })) + "</p>" +
       (online && b.state[st.state] ? '<p class="meta">' + esc(b.state[st.state]) + "</p>" : "") +
       (b.outcome[st.outcome] ? '<p class="meta">' + esc(b.outcome[st.outcome]) + "</p>" : "") +
+      v08Warnings(st, b) +
       '</div><div class="box-act"><button class="btn sm" data-refill-box="' + esc(d.id) + '">' + esc(b.refill) + '</button><button class="btn sm ghost" data-edit-box="' + esc(d.id) + '">' + esc(b.setup) + "</button></div></li>";
   }).join("");
   return '<section class="panel stack"><div class="row-between"><h2 class="h-card">' + esc(b.title) + '</h2><button class="btn sm" data-add-box-device>' + icon("plus", 16) + esc(b.add) + "</button></div>" +
