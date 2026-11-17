@@ -5,7 +5,7 @@
 // ---- misure della scatoletta (mm) -------------------------------------------------------
 const R_O = 47, N = 15, L_TASCA = 24, PROF = 13, LARG_MAX = 14.8;
 const USCITA = [13, 14];                 // la pillola deve passare dall'uscita in basso
-const RICARICA_ALTO = { tetto: [7.2, 10], vaschetta: { spessore: 3.5, larghezza: 10 }, scivolo: [4.2, 12] };   // v0.9 e v1.0
+const RICARICA_ALTO = [6.3, 12, 16.7];   // v1.0: vaschetta stretta, misure ordinate (spessore, larghezza, lunghezza) in mm
 export const SCOMPARTO_MM3 = 4260;
 const RIEMPIMENTO = 0.45;                // pillole alla rinfusa: occupano circa il 45-60% del volume; si usa il caso peggiore
 
@@ -52,8 +52,8 @@ function stanzaInScomparto(s) {
 export function controllaPillola(m) {
   const s = misure(m); if (!s) return null;
   const scomparto = stanzaInScomparto(s), uscita = passa(s, ...USCITA);
-  const d = [s.l, s.w, s.t].sort((x, y) => x - y), v = RICARICA_ALTO.vaschetta;
-  const alto = passa(s, ...RICARICA_ALTO.tetto) && d[0] <= v.spessore && d[1] <= v.larghezza && passa(s, ...RICARICA_ALTO.scivolo);
+  const d = [s.l, s.w, s.t].sort((x, y) => x - y);
+  const alto = d.every((x, i) => x <= RICARICA_ALTO[i]);
   return { ok: scomparto && uscita, scomparto, uscita, alto };
 }
 /** Una pillola va presa a mano se e' esclusa o se non entra / non esce. */

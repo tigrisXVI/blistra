@@ -159,7 +159,7 @@ const V3 = {
   it: {
     tabs: { today: "Oggi", circle: "Cerchia", meds: "Farmaci", reminders: "Promemoria", account: "Account" },
     box: { title: "Scatoletta", lead: "La scatoletta portapillole collegata: fino a 4 dosi al giorno per una settimana. All'ora giusta prepara la dose e conferma qui, dal peso, quando è stata erogata.",
-      model: "Modello", model_v05: "Scatoletta v0.5 (un carosello)", model_v08: "Scatoletta v0.8 (due ruote, uno sportellino per scomparto)", model_v10: "Scatoletta v0.9 o v1.0 (due ruote, ricarica dall'alto, sensore di umidità)",
+      model: "Modello", model_v05: "Scatoletta v0.5 (un carosello)", model_v08: "Scatoletta v0.8 (due ruote, uno sportellino per scomparto)", model_v10: "Scatoletta v1.0 (due ruote, ricarica dall'alto, sensore di umidità)",
       size: "Misure della pillola (per la scatoletta)", size_hint: "Dal foglietto o dalla scheda tecnica (sezione 3), oppure misurale con un calibro. Servono a capire se la pillola entra nella scatoletta.", size_l: "Lunghezza", size_w: "Larghezza", size_t: "Spessore",
       size_ok: "Entra nella scatoletta. La ricarica dall'alto è troppo stretta: caricala dalla cassetta.", size_ok_top: "Entra nella scatoletta, anche dalla ricarica dall'alto.", size_no_comp: "Troppo grande per uno scomparto: va presa a mano.", size_no_exit: "Entra nello scomparto ma non passa dall'uscita: va presa a mano.",
       excluded: "Da non mettere nella scatoletta: {r}", source: "Fonte", sensitive: "{m}: soffre l'umidità. Caricalo per non più di {n} giorni, sempre con il gel nuovo, e chiedi conferma al farmacista.",
@@ -197,7 +197,7 @@ const V3 = {
   en: {
     tabs: { today: "Today", circle: "Circle", meds: "Medicines", reminders: "Reminders", account: "Account" },
     box: { title: "Pill box", lead: "The connected pill box: up to 4 doses a day for a week. At the right time it prepares the dose and confirms here, by weight, when it was dispensed.",
-      model: "Model", model_v05: "Pill box v0.5 (one carousel)", model_v08: "Pill box v0.8 (two wheels, one door per compartment)", model_v10: "Pill box v0.9 or v1.0 (two wheels, top refill, humidity sensor)",
+      model: "Model", model_v05: "Pill box v0.5 (one carousel)", model_v08: "Pill box v0.8 (two wheels, one door per compartment)", model_v10: "Pill box v1.0 (two wheels, top refill, humidity sensor)",
       size: "Pill size (for the pill box)", size_hint: "From the leaflet or the product information (section 3), or measure it with calipers. It tells whether the pill fits the pill box.", size_l: "Length", size_w: "Width", size_t: "Thickness",
       size_ok: "Fits the pill box. The top refill is too narrow: load it from the cassette.", size_ok_top: "Fits the pill box, also through the top refill.", size_no_comp: "Too big for a compartment: give it by hand.", size_no_exit: "Fits the compartment but not the exit: give it by hand.",
       excluded: "Do not put in the pill box: {r}", source: "Source", sensitive: "{m}: sensitive to humidity. Load it for no more than {n} days, always with fresh gel, and ask the pharmacist to confirm.",
