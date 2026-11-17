@@ -61,6 +61,8 @@ function v08Warnings(st, b) {
     if (st.wheels && st.wheels[k] === "check") w.push(fmt(b.warn_wheel, { w: side(k) }));
   }
   for (const x of (Array.isArray(st.skipped) ? st.skipped.slice(-3) : [])) w.push(fmt(b.warn_skipped, { t: String(x.time || "?"), d: String(x.day || "") }));
+  const h = Math.round(Number(st.rh) || 0);   // v1.0: stato del gel dal sensore AHT20 (umidita.h)
+  if (st.gel === "ora") w.push(fmt(b.warn_gel_now, { h })); else if (st.gel === "presto") w.push(fmt(b.warn_gel_soon, { h }));
   return w.map(x => '<p class="meta warn">' + esc(x) + "</p>").join("");
 }
 

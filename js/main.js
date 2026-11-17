@@ -12,7 +12,7 @@ import { viewPrivacy, viewTerms } from "./views/legal.js";
 import { viewToday } from "./views/today.js";
 import { viewCircle, viewMeds, viewReminders, viewWeek, viewAccount } from "./views/manage.js";
 import * as St from "./views/studio.js";
-import { drafts, openMedForm, drawMedForm, syncMedDraft, openRemForm, drawRemForm, openPatientForm, openSheet, openLockSetup, openPinForm, openBoxForm, openBoxRefill } from "./forms.js";
+import { drafts, openMedForm, drawMedForm, syncMedDraft, sizeEsito, openRemForm, drawRemForm, openPatientForm, openSheet, openLockSetup, openPinForm, openBoxForm, openBoxRefill } from "./forms.js";
 import { unlockAudio, ring, checkAlarms, dismissAlarm, snoozes } from "./alarms.js";
 import { downloadICS } from "./ics.js";
 import { demoStore } from "./stores/demo.js";
@@ -241,6 +241,7 @@ document.addEventListener("click", e => {
 });
 
 document.addEventListener("input", e => {
+  if (["f-sl", "f-sw", "f-st", "f-name"].includes(e.target.id) && drafts.med) { syncMedDraft(); const r = document.getElementById("f-size-res"); if (r) r.innerHTML = sizeEsito(drafts.med); }   // v1.0: controllo delle misure mentre scrivi
   const el = e.target;
   if (el.dataset && el.dataset.k && site.draft) {
     const r = St.onStudioInput(el);
@@ -323,7 +324,7 @@ document.addEventListener("submit", e => {
     if (!n || !times[0]) return;
     const weights = {}; e.target.querySelectorAll("[data-cal]").forEach(i => { const v = Math.round(Number(i.value)); if (v >= 1 && v <= 5000) weights[i.dataset.cal] = v; });
     const d = { id: e.target.dataset.id, name: n.slice(0, 40), patientId: g("b-pat").value, times, weights };
-    prefs.boxModels = Object.assign({}, prefs.boxModels, { [d.id]: g("b-model").value === "v08" ? "v08" : "v05" }); savePrefs();   // resta su questo telefono
+    prefs.boxModels = Object.assign({}, prefs.boxModels, { [d.id]: ["v08", "v10"].includes(g("b-model").value) ? g("b-model").value : "v05" }); savePrefs();   // resta su questo telefono
     closeModal(); act(() => store.saveDevice(d)); return;
   }
   if (id === "lockform") {

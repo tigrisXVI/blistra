@@ -7,6 +7,7 @@ import { patients, patientById, currentPatientId, COLORS, PCOLORS } from "./doma
 import { modal, medVisual, pillSVG, icon, toast } from "./ui.js";
 import { FARMACI } from "./data/farmaci.js";
 import { schedaPer, AIFA_URL } from "./data/schede.js";
+import { controllaPillola, esclusoPer, delicato, aMano, riempimento, GIORNI_MAX } from "./data/scatoletta.js";
 
 export const drafts = { med: null, rem: null };
 
@@ -51,9 +52,28 @@ export function drawMedForm(err, keep) {
     '<div class="chips">' + sw + '</div><div class="chips">' + shapes + "</div>" +
     '<label class="f">' + esc(t.f_desc) + '<input type="text" id="f-look" value="' + esc(d.look) + '" placeholder="' + esc(t.f_desc_ph) + '" maxlength="120"></label>' +
     '<label class="f">' + esc(t.f_note) + '<input type="text" id="f-note" value="' + esc(d.note) + '" placeholder="' + esc(t.f_note_ph) + '" maxlength="100"></label></fieldset>' +
+    sizeFieldset(d) +
     "<fieldset><legend>" + esc(t.f_stock) + '</legend><div class="grid3"><label class="f">' + esc(t.f_count) + '<input type="number" id="f-count" min="0" max="9999" step="1" value="' + (d.stock.count == null ? "" : d.stock.count) + '"></label><label class="f">' + esc(t.f_box) + '<input type="number" id="f-box" min="1" max="999" step="1" value="' + (d.stock.box || "") + '"></label><label class="f">' + esc(t.f_thr) + '<input type="number" id="f-thr" min="1" max="90" step="1" value="' + (d.stock.threshold || 7) + '"></label></div></fieldset>' +
     "<fieldset><legend>" + esc(t.f_rx) + '</legend><div class="grid2"><label class="f">' + esc(t.f_doctor) + '<input type="text" id="f-doc" value="' + esc(d.rx.doctor) + '" maxlength="50"></label><label class="f">' + esc(t.f_expires) + '<input type="date" id="f-exp" value="' + esc(d.rx.expires) + '"></label></div><label class="f">' + esc(t.f_rx_note) + '<input type="text" id="f-rxn" value="' + esc(d.rx.note) + '" placeholder="' + esc(t.f_rx_note_ph) + '" maxlength="100"></label></fieldset>' +
     actions(d._new, 'data-del-med="' + esc(d.id) + '"') + "</form>", { wide: true, keep: !!keep });
+}
+
+/** v1.0: pill size, so the app knows whether it fits the pill box (I-7) and whether it may go in at all (I-13). */
+function sizeFieldset(d) {
+  const b = L().box, z = d.size || {};
+  const inp = (id, k, lab) => '<label class="f">' + esc(lab) + '<span class="unit"><input type="number" inputmode="decimal" id="' + id + '" min="1" max="39" step="0.1" value="' + esc(z[k] == null ? "" : String(z[k])) + '"> mm</span></label>';
+  return "<fieldset><legend>" + esc(b.size) + '</legend><p class="hint">' + esc(b.size_hint) + '</p><div class="grid3">' +
+    inp("f-sl", "l", b.size_l) + inp("f-sw", "w", b.size_w) + inp("f-st", "t", b.size_t) + '</div><div id="f-size-res" aria-live="polite">' + sizeEsito(d) + "</div></fieldset>";
+}
+/** The verdict under the size fields; redrawn on its own while typing. */
+export function sizeEsito(d) {
+  const b = L().box, c = controllaPillola(d), ex = esclusoPer(d);
+  let esito = "";
+  if (ex) esito = '<p class="hint warn">' + esc(fmt(b.excluded, { r: ex[document.documentElement.lang === "en" ? "en" : "it"] })) + ' <a href="' + esc(ex.fonte) + '" target="_blank" rel="noopener">' + esc(b.source) + "</a></p>";
+  else if (c && !c.ok) esito = '<p class="hint warn">' + esc(c.scomparto ? b.size_no_exit : b.size_no_comp) + "</p>";
+  else if (c) esito = '<p class="hint ok">' + esc(c.alto ? b.size_ok_top : b.size_ok) + "</p>";
+  if (!ex && delicato(d)) esito += '<p class="hint warn">' + esc(fmt(b.sensitive, { m: d.name, n: GIORNI_MAX })) + "</p>";
+  return esito;
 }
 
 export function syncMedDraft() {
@@ -62,6 +82,9 @@ export function syncMedDraft() {
   d.patientId = g("f-pat").value; d.name = g("f-name").value; d.dose = g("f-dose").value;
   d.units = Math.min(20, Math.max(0.25, parseFloat(g("f-units").value) || 1));
   d.alarm = g("f-alarm").checked; d.look = g("f-look").value; d.note = g("f-note").value;
+  const mm = id => { const v = parseFloat(String(g(id).value).replace(",", ".")); return v > 0 && v < 40 ? Math.round(v * 10) / 10 : null; };
+  const sz = { l: mm("f-sl"), w: mm("f-sw"), t: mm("f-st") };
+  d.size = sz.l || sz.w || sz.t ? sz : null;
   const dl = {};
   document.querySelectorAll("[data-time]").forEach(el => { const i = +el.dataset.time; d.times[i] = el.value; const x = document.querySelector('[data-dl="' + i + '"]'); if (x && x.value && el.value) dl[el.value] = x.value; });
   d.deadlines = dl;
@@ -124,7 +147,7 @@ export function openBoxForm(dev, familyId) {
   modal('<form class="stack" id="boxform" data-id="' + esc(d.id) + '">' + sheetHead(isNew ? b.add : d.name) +
     '<label class="f">' + esc(b.name) + '<input type="text" id="b-name" value="' + esc(d.name) + '" placeholder="' + esc(b.name_ph) + '" maxlength="40" required></label>' +
     '<label class="f">' + esc(b.for_who) + '<select id="b-pat">' + ps + "</select></label>" +
-    '<label class="f">' + esc(b.model) + '<select id="b-model">' + ["v05", "v08"].map(v => '<option value="' + v + '"' + (boxModel(d) === v ? " selected" : "") + ">" + esc(b["model_" + v]) + "</option>").join("") + '</select></label><p class="hint">' + esc(b.model_hint) + "</p>" +
+    '<label class="f">' + esc(b.model) + '<select id="b-model">' + ["v05", "v08", "v10"].map(v => '<option value="' + v + '"' + (boxModel(d) === v ? " selected" : "") + ">" + esc(b["model_" + v]) + "</option>").join("") + '</select></label><p class="hint">' + esc(b.model_hint) + "</p>" +
     "<fieldset><legend>" + esc(b.times) + '</legend><div class="grid2">' + [0, 1, 2, 3].map(i =>
       '<label class="f">' + esc(fmt(b.dose_n, { n: i + 1 })) + '<input type="time" data-btime="' + i + '" value="' + esc(tt[i] || "") + '"' + (i === 0 ? " required" : "") + "></label>").join("") + "</div></fieldset>" +
     '<p class="hint">' + esc(b.split) + "</p>" +
@@ -164,32 +187,40 @@ export function boxPlan(d) {
     const day = Math.floor(i / 4), dose = i % 4, items = [];
     if (times[dose]) meds.forEach(m => { if (!(m.days || []).includes(day)) return;
       const n = (m.times || []).filter(tm => doseOf(tm, times) === dose).length * (m.units || 1); if (n) items.push({ m, n }); });
-    const known = items.length && items.every(x => w[x.m.id] > 0);
-    const light = items.filter(x => w[x.m.id] > 0 && w[x.m.id] < MIN_MG).map(x => x.m.name);
-    return { n: i + 1, day, dose, time: times[dose], items, light, mg: known ? items.reduce((s, x) => s + x.n * w[x.m.id], 0) : null };
+    const mano = items.filter(x => aMano(x.m)), dentro = items.filter(x => !aMano(x.m));   // v1.0: le pillole che non entrano o non vanno caricate restano fuori
+    const known = dentro.length && dentro.every(x => w[x.m.id] > 0);
+    const light = dentro.filter(x => w[x.m.id] > 0 && w[x.m.id] < MIN_MG).map(x => x.m.name);
+    const pieno = riempimento(dentro);
+    return { n: i + 1, day, dose, time: times[dose], items: dentro, mano, pieno, light, mg: known ? dentro.reduce((s, x) => s + x.n * w[x.m.id], 0) : null };
   });
 }
 
 /** Which box this is (kept on this phone): "v05" one carousel, "v08" two wheels with one door per compartment. */
 export function boxModel(d) { return (prefs.boxModels || {})[d.id] || "v05"; }
+/** Two wheels with one door per compartment: v0.8, v0.9 and v1.0. */
+export function dueRuote(d) { return boxModel(d) !== "v05"; }
 
 /** Guided refill: compartment by compartment, with the check the box made by weight.
  *  On the two-wheel box (v0.8) odd compartments are on the left wheel and even ones on the right; the number is printed on the hub. */
 export function openBoxRefill(d) {
-  const t = L(), b = t.box, loads = (d.status && d.status.loads) || {}, due = boxModel(d) === "v08";
+  const t = L(), b = t.box, loads = (d.status && d.status.loads) || {}, due = dueRuote(d);
   const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(document.documentElement.lang || "it", { weekday: "long" });
   const riga = c => { const st = loads[c.n];
     return '<li class="comp"><div class="row-wrap"><h3>' + esc(fmt(b.comp, { n: c.n })) + '</h3>' + (due ? '<span class="tag">' + esc(c.n % 2 ? b.wheel_l : b.wheel_r) + "</span>" : "") + '<span class="muted">' + esc(c.time ? fmt(b.slot, { d: dayName(c.day), k: c.dose + 1, t: c.time }) : fmt(b.slot_off, { d: dayName(c.day), k: c.dose + 1 })) + "</span>" +
       (st === "ok" || st === "bad" ? '<span class="tag ' + (st === "ok" ? "ok" : "late") + '">' + esc(st === "ok" ? b.load_ok : b.load_bad) + "</span>" : "") +
       (c.light.length ? '<span class="tag late">' + esc(b.light_tag) + "</span>" : "") + "</div>" +
       (c.items.length ? '<p class="meta">' + c.items.map(x => esc(x.n + "× " + x.m.name)).join(" · ") + (c.mg ? " · " + esc(fmt(b.exp_w, { g: (c.mg / 1000).toFixed(2) })) : "") + "</p>" : '<p class="meta muted">' + esc(b.comp_empty) + "</p>") +
-      (c.light.length ? '<p class="hint warn">' + esc(fmt(b.light_dose, { m: c.light.join(", "), n: MIN_MG })) + "</p>" : "") + "</li>"; };
+      (c.light.length ? '<p class="hint warn">' + esc(fmt(b.light_dose, { m: c.light.join(", "), n: MIN_MG })) + "</p>" : "") +
+      (c.mano.length ? '<p class="hint warn">' + esc(fmt(b.by_hand_dose, { m: c.mano.map(x => x.n + "× " + x.m.name).join(", ") })) + "</p>" : "") +
+      (c.pieno > 1 ? '<p class="hint warn">' + esc(fmt(b.too_full, { p: Math.round(c.pieno * 100) })) + "</p>" : "") + "</li>"; };
   const piano = boxPlan(d);
   const corpo = due
     ? [1, 0].map(dispari => '<h3 class="wheel-head">' + esc(dispari ? b.wheel_l_head : b.wheel_r_head) + '</h3><ul class="boxes">' + piano.filter(c => c.n % 2 === dispari).map(riga).join("") + "</ul>").join("")
     : '<ul class="boxes">' + piano.map(riga).join("") + "</ul>";
   const sblocca = due ? '<div class="btn-row"><button type="button" class="btn primary" data-unlock-box="' + esc(d.id) + '">' + esc(b.unlock) + '</button></div><p class="hint">' + esc(b.unlock_hint) + "</p>" : "";
-  modal('<div class="stack">' + sheetHead(b.refill) + '<p class="muted">' + esc(due ? b.refill_lead8 : b.refill_lead) + "</p>" + sblocca + corpo + "</div>");
+  const delicati = boxMeds(d).filter(delicato).map(m => m.name);
+  const nota = delicati.length ? '<p class="hint warn">' + esc(fmt(b.sensitive, { m: delicati.join(", "), n: GIORNI_MAX })) + "</p>" : "";
+  modal('<div class="stack">' + sheetHead(b.refill) + '<p class="muted">' + esc(due ? b.refill_lead8 : b.refill_lead) + "</p>" + '<p class="hint">' + esc(fmt(b.gel_rule, { n: GIORNI_MAX })) + "</p>" + nota + sblocca + corpo + "</div>");
 }
 
 // ---- lock the phone to one person ---------------------------------------------------
