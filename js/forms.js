@@ -7,7 +7,7 @@ import { patients, patientById, currentPatientId, COLORS, PCOLORS } from "./doma
 import { modal, medVisual, pillSVG, icon, toast } from "./ui.js";
 import { FARMACI } from "./data/farmaci.js";
 import { schedaPer, AIFA_URL } from "./data/schede.js";
-import { controllaPillola, esclusoPer, delicato, aMano, riempimento, GIORNI_MAX } from "./data/scatoletta.js";
+import { controllaPillola, esclusoPer, delicato, aMano, riempimento, GIORNI_MAX } from "./data/spill.js";
 
 export const drafts = { med: null, rem: null };
 
@@ -137,7 +137,7 @@ export function openSheet(m) {
     '<p class="hint">' + esc(t.sheet_disclaimer) + '</p><div class="sheet-actions"><button class="btn ghost sm" data-edit="' + esc(m.id) + '">' + icon("edit", 16) + esc(t.edit) + '</button><button class="btn" data-close>' + esc(t.close) + "</button></div></div>");
 }
 
-// ---- pill box (Scatoletta Blistra) ---------------------------------------------------
+// ---- pill box (S-pill the tea) ---------------------------------------------------
 
 export function openBoxForm(dev, familyId) {
   const t = L(), b = t.box, isNew = !dev;

@@ -8,7 +8,7 @@
 //   families/{fid}/meds/{id}        one medicine with its schedule, stock and prescription
 //   families/{fid}/reminders/{id}   appointments and other reminders
 //   families/{fid}/logs/{yyyy-mm-dd} doses taken that day
-//   families/{fid}/devices/{id}     a Scatoletta Blistra: who it is for, its times, pill weights (mg), its last status
+//   families/{fid}/devices/{id}     a S-pill the tea: who it is for, its times, pill weights (mg), its last status
 //   invites/{CODE}                  invite code -> circle id
 //   site/public                     texts and look of the public page (edited in Studio)
 //   media/{id}                      images uploaded from Studio

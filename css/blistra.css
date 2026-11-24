@@ -538,7 +538,7 @@ table.users th { font-size: .85rem; color: var(--muted); background: var(--paper
   table.week thead th { background: #eee; color: #000; }
 }
 
-/* ---- pill box (Scatoletta) ---- */
+/* ---- pill box (S-pill) ---- */
 .boxes { list-style: none; margin: 0; padding: 0; }
 .box-row { display: grid; grid-template-columns: 52px 1fr auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
 .box-row h3, .comp h3 { font-size: 1.1rem; margin: 0; }

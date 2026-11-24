@@ -1,15 +1,15 @@
-// Cosa entra nella Scatoletta Blistra (v0.9 e v1.0: due ruote da 15 scomparti) e cosa va preso a mano.
-// Le misure vengono dal modello 3D (cad/scatoletta_v10.py) e dal rapporto R&D del progetto:
-// https://github.com/tigrisXVI/scatoletta-blistra (cartella rd/).
+// Cosa entra nella S-pill the tea (v0.9 e v1.0: due ruote da 15 scomparti) e cosa va preso a mano.
+// Le misure vengono dal modello 3D (cad/spill_v10.py) e dal rapporto R&D del progetto:
+// https://github.com/tigrisXVI/s-pill-the-tea (cartella rd/).
 
-// ---- misure della scatoletta (mm) -------------------------------------------------------
+// ---- misure della S-pill (mm) -------------------------------------------------------
 const R_O = 47, N = 15, L_TASCA = 24, PROF = 13, LARG_MAX = 14.8;
 const USCITA = [13, 14];                 // la pillola deve passare dall'uscita in basso
 const RICARICA_ALTO = [6.3, 12, 16.7];   // v1.0: vaschetta stretta, misure ordinate (spessore, larghezza, lunghezza) in mm
 export const SCOMPARTO_MM3 = 4260;
 const RIEMPIMENTO = 0.45;                // pillole alla rinfusa: occupano circa il 45-60% del volume; si usa il caso peggiore
 
-// ---- farmaci che non vanno messi nella scatoletta (I-13) ---------------------------------
+// ---- farmaci che non vanno messi nella S-pill (I-13) ---------------------------------
 // Solo quelli con una fonte. Un farmacista deve comunque confermare ogni farmaco prima del carico.
 export const ESCLUSI = {
   "Dabigatran": { it: "Le capsule assorbono umidità fuori dalla confezione originale: in uno studio sono rimaste buone 28 giorni solo in frigorifero.",

@@ -42,7 +42,7 @@ export const A = {
   familyLoading: false,
   meds: [],
   reminders: [],
-  devices: [],         // pill boxes (Scatoletta Blistra) linked to the circle
+  devices: [],         // pill boxes (S-pill the tea) linked to the circle
   logs: {},
   error: ""
 };

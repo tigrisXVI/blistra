@@ -38,11 +38,11 @@ function demoSeed() {
       const k = entryKey(x.m.id, x.t), tm = toMin(x.t);
       let take;
       if (back === 0) take = tm <= nowMin && x !== leaveOpen;
-      else take = (i * 7 + back * 3) % (back < 18 ? 23 : 7) !== 0;   // con la scatoletta si saltano meno dosi
+      else take = (i * 7 + back * 3) % (back < 18 ? 23 : 7) !== 0;   // con la S-pill si saltano meno dosi
       if (take) {
         const at = fromMin(tm + ((i * 5 + back) % 18));
-        const byLuca = (i + back) % 3 === 0, byBox = x.m.patientId === p1 && back < 18 && !byLuca;   // da 18 giorni Maria usa la scatoletta
-        logs[key][k] = { at, by: byLuca ? luca : byBox ? "box" : "device", byName: byLuca ? "Luca" : byBox ? "Scatoletta" : fam.patients[x.m.patientId].name, ts: parseYmd(key).getTime() + toMin(at) * 60000 };
+        const byLuca = (i + back) % 3 === 0, byBox = x.m.patientId === p1 && back < 18 && !byLuca;   // da 18 giorni Maria usa la S-pill
+        logs[key][k] = { at, by: byLuca ? luca : byBox ? "box" : "device", byName: byLuca ? "Luca" : byBox ? "S-pill" : fam.patients[x.m.patientId].name, ts: parseYmd(key).getTime() + toMin(at) * 60000 };
       }
     });
   }
@@ -57,7 +57,7 @@ export function demoStore() {
   let D;
   try { D = JSON.parse(localStorage.getItem(DEMO_KEY)); } catch (e) { D = null; }
   if (!D || !D.family) D = demoSeed();
-  if (!D.devices) D.devices = [{ id: "box_demo", name: prefs.lang === "it" ? "Scatoletta di Maria" : "Maria's box", patientId: "p_maria", times: ["08:00", "13:00", "", "21:00"],
+  if (!D.devices) D.devices = [{ id: "box_demo", name: prefs.lang === "it" ? "S-pill di Maria" : "Maria's box", patientId: "p_maria", times: ["08:00", "13:00", "", "21:00"],
     weights: { m2: 180, m3: 560 }, status: { lastSeen: Date.now(), state: "idle", sector: 0, lastEvent: "dose presa", outcome: "all", loads: { 1: "ok", 2: "ok", 4: "ok", 5: "bad" }, locks: { sx: "closed", dx: "open" }, wheels: { sx: "ok", dx: "ok" }, skipped: [{ time: "08:00", day: "ieri" }], fw: "0.8" } }];
   const persist = () => { try { localStorage.setItem(DEMO_KEY, JSON.stringify(D)); } catch (e) { } };
   const sync = () => {
